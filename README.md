@@ -1,9 +1,15 @@
 # TpuGraphs: A Performance Prediction Dataset on Large Tensor Computational Graphs
 
-TpuGraphs is a performance prediction dataset on full tensor programs, represented as computational graphs, running on Tensor Processing Units (TPUs). Each graph in the dataset represents the main computation of a machine learning workload, e.g., a training epoch or an inference step. Each data sample contains a computational graph, a compilation configuration, and the execution time of the graph when compiled with the configuration. The graphs in the dataset are collected from open-source machine learning programs, featuring popular model architectures (e.g., ResNet, EfficientNet, Mask R-CNN, and Transformer). The dataset is located at `http://download.tensorflow.org/data/tpu_graphs/v0`.
+TpuGraphs is a performance prediction dataset on full tensor programs, represented as computational graphs, running on Tensor Processing Units (TPUs). Each graph in the dataset represents the main computation of a machine learning workload, e.g., a training epoch or an inference step. Each data sample contains a computational graph, a compilation configuration, and the execution time of the graph when compiled with the configuration. The graphs in the dataset are collected from open-source machine learning programs, featuring popular model architectures (e.g., ResNet, EfficientNet, Mask R-CNN, and Transformer).
 
 *This is not an officially supported Google product.*
 
+## Dataset
+
+The dataset is located at http://download.tensorflow.org/data/tpu_graphs/v0.
+
+- License: http://download.tensorflow.org/data/tpu_graphs/v0/LICENSE
+- The statistics of all data collections can be found at http://download.tensorflow.org/data/tpu_graphs/v0/stat/*.csv. Please refer to http://download.tensorflow.org/data/tpu_graphs/v0/stat/README.md on the description of the statistics.
 
 ## Running Baseline Models
 
