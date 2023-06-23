@@ -21,6 +21,10 @@ from typing import NamedTuple
 from absl import flags
 
 _EPOCHS = flags.DEFINE_integer('epochs', 100, 'number of train epochs.')
+_EARLY_STOP = flags.DEFINE_integer(
+    'early_stop', 20,
+    'If held-out validation does not improve after this many epochs, then '
+    'training will stop. Must be divisible by `--eval_every`.')
 _EVAL_EVERY = flags.DEFINE_integer(
     'eval_every', 5, 'Eval every this many.')
 _LOSSES = flags.DEFINE_string(
@@ -36,7 +40,7 @@ _BATCH = flags.DEFINE_integer(
     'batch', 10,
     'Batch size: number of subgraphs, each with `--configs` configurations.')
 _MODEL = flags.DEFINE_string(
-    'model', 'MLP',
+    'model', 'EarlyJoinSAGE',
     'Name of model. Must be a class in models.py. E.g., LateJoinResGCN, '
     'EarlyJoinResGCN, LateJoinSAGE, EarlyJoinSAGE, MLP.')
 _MODEL_KWARGS_JSON = flags.DEFINE_string(
@@ -50,7 +54,8 @@ _TEST_MODE = flags.DEFINE_enum(
     'file (written in `--out_dir`). If set to "predictions", then csv file '
     'will be written containing predictions.')
 _OUTPUT_DIR = flags.DEFINE_string(
-    'out_dir', '~/out/tpugraphs_tiles', 'Output metrics will be written here.')
+    'out_dir', '~/out/tpugraphs_tiles',
+    'Output metrics and trained models will be written here.')
 _VALIDATE_BATCHES = flags.DEFINE_integer(
     'validate_batches', -1,
     'If set to >0, then only this many batches will be used to compute '
@@ -65,9 +70,10 @@ class TrainArgs(NamedTuple):
   """Bundles flags for model specification and training loop."""
   # Training loop.
   epochs: int
-  eval_every: int
+  eval_every: int  # DEPRECATED. To be removed.
   batch_size: int
   configs: int
+  early_stop: int
 
   # Optimization.
   losses: str
@@ -96,7 +102,8 @@ def get_args() -> TrainArgs:
   return TrainArgs(
       epochs=_EPOCHS.value, eval_every=_EVAL_EVERY.value, losses=_LOSSES.value,
       batch_size=_BATCH.value, configs=_NUM_CONFIGS.value,
-      learning_rate=_LEARNING_RATE.value, clip_norm=_CLIP_NORM.value,
-      model=_MODEL.value, model_kwargs_json=_MODEL_KWARGS_JSON.value,
-      test_mode=_TEST_MODE.value, out_dir=_OUTPUT_DIR.value,
-      validate_batches=_VALIDATE_BATCHES.value, run_id=_RUN_ID.value)
+      early_stop=_EARLY_STOP.value, learning_rate=_LEARNING_RATE.value,
+      clip_norm=_CLIP_NORM.value, model=_MODEL.value,
+      model_kwargs_json=_MODEL_KWARGS_JSON.value, test_mode=_TEST_MODE.value,
+      out_dir=_OUTPUT_DIR.value, validate_batches=_VALIDATE_BATCHES.value,
+      run_id=_RUN_ID.value)

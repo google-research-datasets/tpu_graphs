@@ -379,7 +379,20 @@ class NpzDataset(NamedTuple):
 def get_npz_dataset(
     root_path: str, min_train_configs=-1,
     cache_dir: None | str = None) -> NpzDataset:
-  return NpzDataset(
+  """Returns {train, test, validation} partitions of tiles dataset collection.
+
+  All partitions will be normalized: statistics are computed from training set
+  partition and applied to all partitions.
+
+  Args:
+    root_path: Path where dataset lives. It must have subdirectories 'train',
+      'test' and 'valid'.
+    min_train_configs: If > 0, then tile examples will be filtered to have at
+      least this many configurations (features and runtimes).
+    cache_dir: If given, the many files for each of {train, test, validation}
+      will be stored as one file (makes loading faster, for future runs).
+  """
+  npz_dataset = NpzDataset(
       train=get_npz_split(
           os.path.join(root_path, 'train'), min_configs=min_train_configs,
           cache_dir=cache_dir),
@@ -387,3 +400,5 @@ def get_npz_dataset(
           os.path.join(root_path, 'valid'), cache_dir=cache_dir),
       test=get_npz_split(
           os.path.join(root_path, 'test'), cache_dir=cache_dir))
+  npz_dataset.normalize()
+  return npz_dataset

@@ -87,7 +87,7 @@ class _SAGE(tf.keras.Model, _ConfigFeatureJoiner):
   def __init__(self, num_configs: int, num_ops: int,
                num_gnns: int = 3, final_mlp_layers: int = 2,
                hidden_activation: str = 'leaky_relu', hidden_dim: int = 64,
-               op_embed_dim: int = 32):
+               op_embed_dim: int = 64):
     super().__init__()
     self._num_configs = num_configs
     self._op_embedding = _OpEmbedding(num_ops, op_embed_dim)

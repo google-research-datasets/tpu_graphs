@@ -19,11 +19,13 @@ import gzip
 import io
 import json
 import os
-from typing import Callable
+from typing import Callable, Any
 
 from absl import flags
+from absl import logging
 import tensorflow as tf
 import tensorflow_gnn as tfgnn
+import tensorflow_ranking as tfr
 from tpu_graphs.baselines.tiles import data
 from tpu_graphs.baselines.tiles import metrics
 from tpu_graphs.baselines.tiles import models
@@ -32,18 +34,45 @@ import tqdm
 
 
 _DATA_ROOT = flags.DEFINE_string(
-    'data_root', '~/data/tpugraphs_tiles',
+    'data_root', '~/data/tpugraphs/npz/tiles',
     'Root directory containing dataset. It must contain subdirectories '
     '{train, test, validation}, each having many .npz files')
 _CACHE_DIR = flags.DEFINE_string(
-    'cache_dir', '~/data/cache/tpugraphs_tiles',
+    'cache_dir', '~/data/tpugraphs/cache/tiles',
     'If given, dataset tensors will be cached here for faster loading.')
 
 
-def graph_and_label(graph: tfgnn.GraphTensor, batch_size=10, num_configs=2):
+def _graph_and_label(graph: tfgnn.GraphTensor, batch_size=10, num_configs=2):
   label = tf.reshape(
       graph.node_sets['config']['runtimes'], [batch_size, num_configs])
   return graph, label
+
+
+# Used for validation. For training, data.py accepts `min_train_configs`.
+def _graph_has_enough_configs(graph: tfgnn.GraphTensor, num_configs=2):
+  """To used to filter validation dataset."""
+  return graph.node_sets['config'].sizes[0] >= num_configs
+
+
+def save_model(
+    model: tf.keras.Model, run_info: dict[str, Any], out_dir: str,
+    args: train_args.TrainArgs):
+  """Writes `model` and `run_info` onto `out_dir`/*`args.compute_hash()`*."""
+  args_hash = args.compute_hash()
+
+  # Save run file.
+  out_run_file = os.path.join(out_dir, f'run_{args_hash}.jsonz')
+  bytes_io = io.BytesIO()
+  with gzip.open(bytes_io, 'wb') as fout:
+    fout.write(json.dumps(run_info).encode())
+  with tf.io.gfile.GFile(out_run_file, 'wb') as fout:
+    fout.write(bytes_io.getvalue())
+  logging.info('wrote %s', out_run_file)
+
+  # Keras model.
+  out_model_file = os.path.join(out_dir, f'model_{args_hash}')
+  model.save(out_model_file)
+  logging.info('wrote %s', out_model_file)
 
 
 def train(args: train_args.TrainArgs):
@@ -54,7 +83,9 @@ def train(args: train_args.TrainArgs):
 
   # Will be written in out_dir.
   run_info = dict(
-      train_curve=dict(epoch=[], train_loss=[], valid_error=[]),
+      train_curve=dict(
+          epoch=[], train_loss=[], train_opa=[], val_loss=[], val_opa=[]),
+      final_error=dict(),
       args=args._asdict(),
   )
 
@@ -64,12 +95,12 @@ def train(args: train_args.TrainArgs):
   dataset_partitions = data.get_npz_dataset(
       data_root_dir, min_train_configs=num_configs,
       cache_dir=os.path.expanduser(_CACHE_DIR.value))
-  dataset_partitions.normalize()
   batch_size = args.batch_size
-  train_ds = dataset_partitions.train.get_graph_tensors_dataset(num_configs)
-  train_ds = train_ds.shuffle(5000, reshuffle_each_iteration=True)
-  train_ds = train_ds.batch(batch_size, drop_remainder=True).map(
-      tfgnn.GraphTensor.merge_batch_to_components)
+  train_ds = (
+      dataset_partitions.train.get_graph_tensors_dataset(num_configs)
+      .shuffle(5000, reshuffle_each_iteration=True)
+      .batch(batch_size, drop_remainder=True)
+      .map(tfgnn.GraphTensor.merge_batch_to_components))
 
   # Model.
   model_class = getattr(models, args.model)
@@ -80,42 +111,66 @@ def train(args: train_args.TrainArgs):
   loss = metrics.CombinedLoss(metrics.parse_loss_str(args.losses))
   opt = tf.keras.optimizers.Adam(
       learning_rate=args.learning_rate, clipnorm=args.clip_norm)
-  model.compile(loss=loss, optimizer=opt)
-  train_ds = train_ds.map(
-      functools.partial(
-          graph_and_label, batch_size=batch_size, num_configs=num_configs))
 
-  valid_ds = dataset_partitions.validation.get_graph_tensors_dataset()
-  if args.validate_batches > 0:
-    valid_ds = valid_ds.take(args.validate_batches)
-  best_valid_error = 99999
+  model.compile(loss=loss, optimizer=opt, metrics=[
+      tfr.keras.metrics.OPAMetric(name='opa_metric'),
+  ])
+  attach_labels_fn = functools.partial(
+      _graph_and_label, batch_size=batch_size, num_configs=num_configs)
+  train_ds = train_ds.map(attach_labels_fn)
+
+  valid_ds = (
+      dataset_partitions.validation.get_graph_tensors_dataset(num_configs)
+      # Get an extra 5% as we follow with `filter()`.
+      .take(int(args.validate_batches * batch_size * 1.05))
+      .filter(
+          functools.partial(_graph_has_enough_configs, num_configs=num_configs))
+      .batch(batch_size, drop_remainder=True)
+      .map(tfgnn.GraphTensor.merge_batch_to_components)
+      .map(attach_labels_fn))
 
   best_params = None
+  best_val_opa = -1
+  best_val_at_epoch = -1
+  train_curve = run_info['train_curve']  # For short.
   for i in range(args.epochs):
+    old_alsologtostderr = flags.FLAGS.alsologtostderr
     flags.FLAGS.alsologtostderr = True
-    history = model.fit(train_ds, epochs=1, verbose=1)
-    flags.FLAGS.alsologtostderr = False
-    run_info['train_curve']['epoch'].append(i)
-    run_info['train_curve']['train_loss'].append(history.history['loss'][-1])
-    valid_error = metrics.top_error_performance(valid_ds, model.forward)
-
-    if valid_error[1] < best_valid_error:
-      best_valid_error = valid_error[1]
+    history = model.fit(
+        train_ds, epochs=1, verbose=1, validation_data=valid_ds)
+    flags.FLAGS.alsologtostderr = old_alsologtostderr
+    train_curve['epoch'].append(i)
+    train_curve['train_loss'].append(history.history['loss'][-1])
+    train_curve['train_opa'].append(history.history['opa_metric'][-1])
+    train_curve['val_loss'].append(history.history['val_loss'][-1])
+    train_curve['val_opa'].append(history.history['val_opa_metric'][-1])
+    val_opa = history.history['val_opa_metric'][-1]
+    if val_opa > best_val_opa:
+      best_val_opa = val_opa
+      best_val_at_epoch = i
       best_params = {v.ref: v + 0 for v in model.trainable_variables}
-      print(' ** Validation (NEW BEST): ', valid_error)
-    else:
-      print(' ** Validation: ', valid_error)
+      logging.info(' * [@%i] Validation (NEW BEST): %s', i, str(val_opa))
+      # Write model and train metrics (in `run_info`).
+      save_model(model, run_info, out_dir, args)
+    elif args.early_stop > 0 and i - best_val_at_epoch >= args.early_stop:
+      logging.info('[@%i] Best accuracy was attained at epoch %i. Stopping.',
+                   i, best_val_at_epoch)
+      break
 
   # Restore best parameters.
   assert best_params is not None
   for v in model.trainable_variables:
     v.assign(best_params[v.ref])
 
+  # Run on full validation.
+  run_info['final_error']['val'] = metrics.top_error_performance(
+      dataset_partitions.validation.get_graph_tensors_dataset(), model.forward)
+
   # Run on test set.
   test_ds = dataset_partitions.test.get_graph_tensors_dataset()
   if args.test_mode == 'metrics':
-    test_error = metrics.top_error_performance(test_ds, model.forward)
-    run_info['train_curve']['final_test_error'] = test_error
+    run_info['final_error']['test'] = metrics.top_error_performance(
+        test_ds, model.forward)
   elif args.test_mode == 'predictions':
     module_ids, predictions = get_predictions(test_ds, model.forward)
     run_info['test_predictions'] = {}
@@ -124,14 +179,8 @@ def train(args: train_args.TrainArgs):
     for module_id, module_predictions in zip(module_ids, predictions):
       module_id = bytes(module_id).decode()
       run_info['test_predictions'][module_id] = module_predictions
-  out_file = os.path.join(out_dir, f'run_{args.compute_hash()}.jsonz')
 
-  bytes_io = io.BytesIO()
-  with gzip.open(bytes_io, 'wb') as fout:
-    fout.write(json.dumps(run_info).encode())
-  with tf.io.gfile.GFile(out_file, 'wb') as fout:
-    fout.write(bytes_io.getvalue())
-  print('wrote ' + out_file)
+  save_model(model, run_info, out_dir, args)
 
 
 def get_predictions(

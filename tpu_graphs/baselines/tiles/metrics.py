@@ -99,8 +99,12 @@ class CombinedLoss(tf.keras.losses.Loss):
   """Computes loss as a weighted-average of losses."""
 
   def __init__(
-      self, weighted_losses: list[tuple[float, tf.keras.losses.Loss]]):
+      self,
+      weighted_losses: None|list[tuple[float, tf.keras.losses.Loss]] = None,
+      reduction=None, name=None):
     super().__init__()
+    if weighted_losses is None:
+      weighted_losses = [(1.0, tfr.keras.losses.ListMLELoss(temperature=10))]
     self._weighted_losses = weighted_losses
     total_weight = sum([w for w, unused_loss in self._weighted_losses])
     self._weighted_losses = [(w / total_weight, loss)
