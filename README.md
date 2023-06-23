@@ -4,9 +4,6 @@ TpuGraphs is a performance prediction dataset on full tensor programs, represent
 
 *This is not an officially supported Google product.*
 
-## Dataset
-
-TODO: location of dataset
 
 ## Running Baseline Models
 
