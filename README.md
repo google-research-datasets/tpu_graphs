@@ -7,9 +7,25 @@ TpuGraphs is a performance prediction dataset on full tensor programs, represent
 ## Dataset
 
 The dataset is located at http://download.tensorflow.org/data/tpu_graphs/v0.
+You can use `wget` or `curl` command to download files.
 
 - License: http://download.tensorflow.org/data/tpu_graphs/v0/LICENSE
 - The statistics of all data collections can be found at http://download.tensorflow.org/data/tpu_graphs/v0/stat/*.csv. Please refer to http://download.tensorflow.org/data/tpu_graphs/v0/stat/README.md on the description of the statistics.
+- Each data file is named as followed: http://download.tensorflow.org/data/tpu_graphs/v0/npz_<opt>_<source>_<search>_<split>.tar
+  - <opt>: `layout` or `tiles`
+  - <source>: `xla` or `nlp`
+  - <search>: `default` or `random` for the layout collection, and `tile` for the tile collection
+  - <split>: `train`, `valid`, or `test`
+
+For example, to copy data for the layout:xla:random collection, run:
+```
+curl http://download.tensorflow.org/data/tpu_graphs/v0/npz_layout_xla_random_train.tar > npz_layout_xla_random_train.tar
+curl http://download.tensorflow.org/data/tpu_graphs/v0/npz_layout_xla_random_valid.tar > npz_layout_xla_random_valid.tar
+curl http://download.tensorflow.org/data/tpu_graphs/v0/npz_layout_xla_random_test.tar > npz_layout_xla_random_test.tar
+tar xvf npz_layout_xla_random_train.tar
+tar xvf npz_layout_xla_random_valid.tar
+tar xvf npz_layout_xla_random_test.tar
+```
 
 ## Running Baseline Models
 
