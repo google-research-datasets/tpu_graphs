@@ -11,11 +11,11 @@ You can use `wget` or `curl` command to download files.
 
 - License: http://download.tensorflow.org/data/tpu_graphs/v0/LICENSE
 - The statistics of all data collections can be found at http://download.tensorflow.org/data/tpu_graphs/v0/stat/*.csv. Please refer to http://download.tensorflow.org/data/tpu_graphs/v0/stat/README.md on the description of the statistics.
-- Each data file is named as followed: http://download.tensorflow.org/data/tpu_graphs/v0/npz_<opt>_<source>_<search>_<split>.tar
-  - <opt>: `layout` or `tiles`
-  - <source>: `xla` or `nlp`
-  - <search>: `default` or `random` for the layout collection, and `tile` for the tile collection
-  - <split>: `train`, `valid`, or `test`
+- Each data file is named as followed: http://download.tensorflow.org/data/tpu_graphs/v0/npz_{opt}_{source}_{search}_{split}.tar
+  - {opt}: `layout` or `tiles`
+  - {source}: `xla` or `nlp`
+  - {search}: `default` or `random` for the layout collection, and `tile` for the tiles collection
+  - {split}: `train`, `valid`, or `test`
 
 For example, to copy data for the layout:xla:random collection, run:
 ```
