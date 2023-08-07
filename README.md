@@ -6,15 +6,20 @@ TpuGraphs is a performance prediction dataset on full tensor programs, represent
 
 ## Dataset
 
+The dataset consists of two compiler optimization collections: *layout* and *tile*.
+Layout configurations control how tensors are laid out in the physical memory, by specifying
+the dimension order of each input and output of an operation node. A tile configuration controls
+the tile size of each fused subgraph.
+
 The dataset is located at http://download.tensorflow.org/data/tpu_graphs/v0.
 You can use `wget` or `curl` command to download files.
 
 - License: http://download.tensorflow.org/data/tpu_graphs/v0/LICENSE
 - The statistics of all data collections can be found at http://download.tensorflow.org/data/tpu_graphs/v0/stat/*.csv. Please refer to http://download.tensorflow.org/data/tpu_graphs/v0/stat/README.md on the description of the statistics.
-- Each data file is named as followed: http://download.tensorflow.org/data/tpu_graphs/v0/npz_{opt}_{source}_{search}_{split}.tar
-  - {opt}: `layout` or `tiles`
+- Each tile data file is named as followed: http://download.tensorflow.org/data/tpu_graphs/v0/npz_tiles_tile_{split}.tar
+- Each layout data file is named as followed: http://download.tensorflow.org/data/tpu_graphs/v0/npz_layout_{source}_{search}_{split}.tar
   - {source}: `xla` or `nlp`
-  - {search}: `default` or `random` for the layout collection, and `tile` for the tiles collection
+  - {search}: `default` or `random`
   - {split}: `train`, `valid`, or `test`
 
 For example, to copy data for the layout:xla:random collection, run:
