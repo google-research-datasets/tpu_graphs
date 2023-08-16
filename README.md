@@ -23,7 +23,11 @@ You can use `wget` or `curl` command to download files.
   - {split}: `train`, `valid`, or `test`
 
 For example, to copy data for the layout:xla:random collection, run:
-```
+
+```sh
+mkdir -p ~/data/tpugraphs
+cd ~/data/tpugraphs
+
 curl http://download.tensorflow.org/data/tpu_graphs/v0/npz_layout_xla_random_train.tar > npz_layout_xla_random_train.tar
 curl http://download.tensorflow.org/data/tpu_graphs/v0/npz_layout_xla_random_valid.tar > npz_layout_xla_random_valid.tar
 curl http://download.tensorflow.org/data/tpu_graphs/v0/npz_layout_xla_random_test.tar > npz_layout_xla_random_test.tar
@@ -32,12 +36,23 @@ tar xvf npz_layout_xla_random_valid.tar
 tar xvf npz_layout_xla_random_test.tar
 ```
 
+To download all files, you may run (from a clone of this directory):
+
+```sh
+python3 echo_download_commands.py | bash
+```
+
+Removing the last pipe (`| bash`) shows the commands for downloading the dataset
+(a few `curl` commands followed by `tar xvf`).
+
+
 ## Running Baseline Models
 
 ### Tile Size Model
 
 #### Python environment setup with Conda
-```
+
+```sh
 conda create -n tpugraphs python=3.10
 conda activate tpugraphs
 
@@ -54,7 +69,8 @@ For subsequent runs, simply activate the same environment with `conda activate t
 #### Copy dataset files
 
 To run the tiles baselines, you should download the tiles dataset:
-```
+
+```sh
 # Create dataset directory
 mkdir -p ~/data/tpugraphs
 cd ~/data/tpugraphs
