@@ -16,6 +16,8 @@
 
 import hashlib
 import json
+import os
+import time
 from typing import NamedTuple
 
 from absl import flags
@@ -56,6 +58,10 @@ _TEST_MODE = flags.DEFINE_enum(
 _OUTPUT_DIR = flags.DEFINE_string(
     'out_dir', '~/out/tpugraphs_tiles',
     'Output metrics and trained models will be written here.')
+_RESULTS_CSV = flags.DEFINE_string(
+    'results_csv', '',
+    'Path to output CSV file to contain inference on test examples. '
+    'If not set, defaults to <--out_dir>/results_<timestamp>.csv.')
 _VALIDATE_BATCHES = flags.DEFINE_integer(
     'validate_batches', -1,
     'If set to >0, then only this many batches will be used to compute '
@@ -87,6 +93,7 @@ class TrainArgs(NamedTuple):
   # Inference.
   test_mode: str
   out_dir: str
+  results_csv: str
   validate_batches: int
 
   # To run multiple experiments.
@@ -98,6 +105,25 @@ class TrainArgs(NamedTuple):
     return hashlib.md5(json_args).hexdigest()
 
 
+def _get_results_csv_or_default() -> str:
+  """Returns path for CSV file where inference results should be saved.
+
+  Returns:
+    If flag --results_csv is set, it returns it. Otherwise, returns
+    f"~/{--out_dir}/results_{timestamp}.csv".
+  """
+  results_csv = _RESULTS_CSV.value
+  if not results_csv:
+    results_csv = os.path.join(
+        os.path.expanduser(_OUTPUT_DIR.value),
+        f'results_{int(time.time() * 1000)}.csv')
+
+  dirname = os.path.dirname(results_csv)
+  if not os.path.exists(dirname):
+    os.makedirs(dirname)
+  return results_csv
+
+
 def get_args() -> TrainArgs:
   return TrainArgs(
       epochs=_EPOCHS.value, eval_every=_EVAL_EVERY.value, losses=_LOSSES.value,
@@ -106,4 +132,4 @@ def get_args() -> TrainArgs:
       clip_norm=_CLIP_NORM.value, model=_MODEL.value,
       model_kwargs_json=_MODEL_KWARGS_JSON.value, test_mode=_TEST_MODE.value,
       out_dir=_OUTPUT_DIR.value, validate_batches=_VALIDATE_BATCHES.value,
-      run_id=_RUN_ID.value)
+      results_csv=_get_results_csv_or_default(), run_id=_RUN_ID.value)

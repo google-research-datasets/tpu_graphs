@@ -172,10 +172,14 @@ def train(args: train_args.TrainArgs):
     run_info['final_error']['test'] = metrics.top_error_performance(
         test_ds, model.forward)
   elif args.test_mode == 'predictions':
-    module_ids, predictions = get_predictions(test_ds, model.forward)
+    module_ids, ranks = rank_config_indices(test_ds, model.forward)
+
+    write_least_runtimes_csv(args.results_csv, module_ids, ranks)
+
+    ### Add test predictions into run_info file.
     run_info['test_predictions'] = {}
     module_ids = module_ids.numpy().tolist()
-    predictions = predictions.numpy().tolist()
+    predictions = ranks.numpy().tolist()
     for module_id, module_predictions in zip(module_ids, predictions):
       module_id = bytes(module_id).decode()
       run_info['test_predictions'][module_id] = module_predictions
@@ -183,11 +187,27 @@ def train(args: train_args.TrainArgs):
   save_model(model, run_info, out_dir, args)
 
 
-def get_predictions(
+def rank_config_indices(
     test_ds: tf.data.Dataset,
-    model_fn: Callable[[tfgnn.GraphTensor, int], tf.Tensor]
+    model_fn: Callable[[tfgnn.GraphTensor, int], tf.Tensor],
+    top_ranks=10
     ) -> tuple[tf.Tensor, tf.Tensor]:
-  """Module IDs and config indices that `model_fn` assigns lowest scores."""
+  """Module IDs and config indices that `model_fn` assigns lowest scores.
+
+  Args:
+    test_ds: Test dataset containing `GraphTensor` instances. Each instance must
+      have node sets `'config'` and `'g'` (with feature 'tile_id')
+    model_fn: Callable (e.g., tf.Keras model) that will be invoked on every item
+      in `test_ds` and the number of configurations (=N). It is expeted to
+      return tensor of shape (1, N). The least indices will be output.
+    top_ranks: Only this many least indices will be kept.
+
+  Returns:
+    Two `tf.Tensor` instances. The first is a vector with entry `[i]` being the
+    `graph.node_sets['g']['tile_id']` of the `i`th element of `test_ds`. The
+    second is a matrix with width `top_ranks`, where row `[i]` being the least
+    `top_ranks` indices when invoking `model_fn` on `graph`.
+  """
   all_sorted_indices = []
   all_module_ids = []
   for graph in tqdm.tqdm(test_ds, desc='Generating Predictions'):
@@ -196,10 +216,26 @@ def get_predictions(
     preds = tf.squeeze(preds, 0)  # Remove batch size (of 1)
     sorted_indices = tf.argsort(preds)
     sorted_indices = tf.concat([  # zero-pad.
-        sorted_indices, tf.zeros([10], dtype=sorted_indices.dtype)
+        sorted_indices, tf.zeros([top_ranks], dtype=sorted_indices.dtype)
     ], axis=0)
-    sorted_indices = sorted_indices[:10]
+    sorted_indices = sorted_indices[:top_ranks]
     all_sorted_indices.append(sorted_indices)
     all_module_ids.append(graph.node_sets['g']['tile_id'][0])
 
   return tf.stack(all_module_ids, axis=0), tf.stack(all_sorted_indices, axis=0)
+
+
+def write_least_runtimes_csv(
+    out_csv_filepath: str, module_ids: tf.Tensor, ranks: tf.Tensor):
+  """Writes CSV file with line `i` containing module_ids[i] and ranks[i]."""
+  csv_ranks = tf.strings.join(
+      tf.strings.as_string(tf.transpose(ranks)), ';')
+
+  stack_join = lambda x, delim: tf.strings.join(tf.stack(x), delim)
+  with tf.io.gfile.GFile(out_csv_filepath, 'w') as fout:
+    fout.write('ID,TopConfigs\n')
+    id_vector = stack_join(
+        [tf.fill(module_ids.shape, 'tile:xla'), module_ids], ':')
+    csv_lines = stack_join([id_vector, csv_ranks], ',')
+    fout.write(stack_join(csv_lines, '\n').numpy().decode('utf-8'))
+  print('\n\n   ***  Wrote', out_csv_filepath, '\n\n')
