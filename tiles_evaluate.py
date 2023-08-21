@@ -36,11 +36,11 @@ _MODEL_DIRS = flags.DEFINE_string(
     'Comma-separated list of model directories to evaluate. '
     'The per-benchmark average will be printed', required=True)
 _DATA_ROOT = flags.DEFINE_string(
-    'data_root', '~/data/tpugraphs/npz/tiles',
+    'data_root', '~/data/tpugraphs/npz/tile/xla',
     'Root directory containing dataset. It must contain subdirectories '
     '{train, test, validation}, each having many .npz files')
 _CACHE_DIR = flags.DEFINE_string(
-    'cache_dir', '~/data/tpugraphs/cache/tiles',
+    'cache_dir', '~/data/tpugraphs/cache/tile/xla',
     'If given, dataset tensors will be cached here for faster loading.')
 
 

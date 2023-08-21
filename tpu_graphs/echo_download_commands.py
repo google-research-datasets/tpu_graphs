@@ -15,7 +15,7 @@
 """Script to print shell command lines to download tpu-graphs dataset."""
 
 filenames = (
-    [f'npz_tiles_tile_{split}.tar' for split in ('train', 'test', 'valid')])
+    [f'npz_tile_xla_{split}.tar' for split in ('train', 'test', 'valid')])
 
 for source in ('xla', 'nlp'):
   for search in ('default', 'random'):

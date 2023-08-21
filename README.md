@@ -16,7 +16,7 @@ You can use `wget` or `curl` command to download files.
 
 - License: http://download.tensorflow.org/data/tpu_graphs/v0/LICENSE
 - The statistics of all data collections can be found at http://download.tensorflow.org/data/tpu_graphs/v0/stat/*.csv. Please refer to http://download.tensorflow.org/data/tpu_graphs/v0/stat/README.md on the description of the statistics.
-- Each tile data file is named as followed: http://download.tensorflow.org/data/tpu_graphs/v0/npz_tiles_tile_{split}.tar
+- Each tile data file is named as followed: http://download.tensorflow.org/data/tpu_graphs/v0/npz_tile_xla_{split}.tar
 - Each layout data file is named as followed: http://download.tensorflow.org/data/tpu_graphs/v0/npz_layout_{source}_{search}_{split}.tar
   - {source}: `xla` or `nlp`
   - {search}: `default` or `random`
@@ -78,12 +78,12 @@ wget http://download.tensorflow.org/data/tpu_graphs/v0/LICENSE > LICENSE
 
 # Copy data from to local dir.
 cd ~/data/tpugraphs
-curl http://download.tensorflow.org/data/tpu_graphs/v0/npz_tiles_tile_train.tar > npz_tiles_tile_train.tar
-curl http://download.tensorflow.org/data/tpu_graphs/v0/npz_tiles_tile_valid.tar > npz_tiles_tile_valid.tar
-curl http://download.tensorflow.org/data/tpu_graphs/v0/npz_tiles_tile_test.tar > npz_tiles_tile_test.tar
-tar xvf npz_tiles_tile_train.tar
-tar xvf npz_tiles_tile_valid.tar
-tar xvf npz_tiles_tile_test.tar
+curl http://download.tensorflow.org/data/tpu_graphs/v0/npz_tile_xla_train.tar > npz_tile_xla_train.tar
+curl http://download.tensorflow.org/data/tpu_graphs/v0/npz_tile_xla_valid.tar > npz_tile_xla_valid.tar
+curl http://download.tensorflow.org/data/tpu_graphs/v0/npz_tile_xla_test.tar > npz_tile_xla_test.tar
+tar xvf npz_tile_xla_train.tar
+tar xvf npz_tile_xla_valid.tar
+tar xvf npz_tile_xla_test.tar
 ```
 
 #### Train model
