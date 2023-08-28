@@ -2,6 +2,8 @@
 
 TpuGraphs is a performance prediction dataset on full tensor programs, represented as computational graphs, running on Tensor Processing Units (TPUs). Each graph in the dataset represents the main computation of a machine learning workload, e.g., a training epoch or an inference step. Each data sample contains a computational graph, a compilation configuration, and the execution time of the graph when compiled with the configuration. The graphs in the dataset are collected from open-source machine learning programs, featuring popular model architectures (e.g., ResNet, EfficientNet, Mask R-CNN, and Transformer).
 
+Please refer to our [paper](https://arxiv.org/abs/2308.13490) for more details about the importance and challenges of the dataset, how the dataset is generated, the model baselines, and the experimental results. Please cite the paper when using this dataset.
+
 *This is not an officially supported Google product.*
 
 ## Dataset
