@@ -50,7 +50,22 @@ Removing the last pipe (`| bash`) shows the commands for downloading the dataset
 
 ## Running Baseline Models
 
-### Tile Size Model
+This repo hosts two training pipelines: `tiles_train.py` and `layout_train.py`,
+respectively, for training models on the collections `tile:xla` and
+`layout:{nlp|xla}:{random|default}`. Both scripts train for some epochs then
+infer predictions on the test set. By default, the trained models are saved and
+alongside a `csv` file containing inference on the test set.
+
+To combine all five inference files into one `csv`, you can run:
+
+```sh
+python combine_csvs.py
+```
+
+NOTE: The above command will look for files produced by `tiles_train.py` and
+`layout_train.py`
+
+### Model on `tile:xla` collection
 
 #### Python environment setup with Conda
 
@@ -151,9 +166,35 @@ This script will print out per-program top-K errors for kernels in the validatio
 }
 ```
 
-## Layout Model
+### Model on `layout:{xla|nlp}:{random|default}` collections
 
-Instructions to train the baseline models for the layout collection can be found at https://github.com/kaidic/GST.
+You may run the GST model, which is available at: https://github.com/kaidic/GST.
+
+You may also run our baseline, by invoking:
+
+```sh
+# As a test.
+python layout_train.py --epochs 10 --toy_data=True
+
+# On xla:random
+python layout_train.py --source xla --search random --epochs 10 --max_configs 1000
+
+# On xla:default
+python layout_train.py --source xla --search default --epochs 10 --max_configs 1000
+
+# On nlp:random
+python layout_train.py --source nlp --search random --epochs 10 --max_configs 1000
+
+# On nlp:default
+python layout_train.py --source nlp --search default --epochs 10 --max_configs 1000
+```
+
+NOTE: For running the NLP models, since the data is large, our trainer script
+cannot fit the data into memory. The flag `--max_configs 1000` allows us to run,
+by sampling only this many configurations per graph. However, you may write your
+own scalable implementation, or modify ours, or run
+GST: https://github.com/kaidic/GST.
+
 
 ## Dataset File Description
 

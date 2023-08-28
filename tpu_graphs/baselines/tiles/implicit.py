@@ -48,6 +48,9 @@ class Multiplier:
     tf.assert_equal(shape(mat)[-1], self.shape[0])
     return self.rmatmul(mat)
 
+  def __add__(self, mat: 'Multiplier') -> 'Multiplier':
+    return Sum(self, mat)
+
   def transpose(self) -> 'Multiplier':
     if self._transpose is None:
       self._transpose = Transpose(self)
@@ -224,7 +227,8 @@ class AdjacencyMultiplier(Multiplier):
     receiver_node_set_name = adj.node_set_name(self._receiver_tag)
     sender_sizes = self._graph.node_sets[sender_node_set_name].sizes
     receiver_sizes = self._graph.node_sets[receiver_node_set_name].sizes
-    return (tf.reduce_sum(receiver_sizes), tf.reduce_sum(sender_sizes))
+    return (tf.cast(tf.reduce_sum(receiver_sizes), tf.int32),
+            tf.cast(tf.reduce_sum(sender_sizes), tf.int32))
 
   def matmul(self, mat: tf.Tensor):
     edge_level = tfgnn.broadcast_node_to_edges(

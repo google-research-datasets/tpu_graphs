@@ -53,14 +53,15 @@ class _ConfigFeatureJoiner(abc.ABC):
     return pooled
 
 
-def _mlp(dims, hidden_activation, l2reg=1e-4):
+def _mlp(dims, hidden_activation, l2reg=1e-4, use_bias=True):
   """Helper function for multi-layer perceptron (MLP)."""
   layers = []
   for i, dim in enumerate(dims):
     if i > 0:
       layers.append(tf.keras.layers.Activation(hidden_activation))
     layers.append(tf.keras.layers.Dense(
-        dim, kernel_regularizer=tf.keras.regularizers.l2(l2reg)))
+        dim, kernel_regularizer=tf.keras.regularizers.l2(l2reg),
+        use_bias=use_bias))
   return tf.keras.Sequential(layers)
 
 
