@@ -53,7 +53,7 @@ _RESULTS_CSV = flags.DEFINE_string(
     'results_csv', '',
     'Path to output CSV file to contain inference on test examples. '
     'If not set, defaults to '
-    '<--out_dir>/results_<timestamp>_<--collection>.csv.')
+    '<--out_dir>/results_<timestamp>_<--source>_<--search>.csv.')
 _VALIDATE_BATCHES = flags.DEFINE_integer(
     'validate_batches', 10,
     'If set to >0, then only this many batches will be used to compute '

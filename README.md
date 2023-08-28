@@ -131,8 +131,14 @@ Search for:
 ```
 where 0.2 error means 20% error.
 
-Please refer to
-[train_args.py](https://github.com/google-research-datasets/tpu_graphs/blob/main/baselines/tiles/train_args.py)
+Further, the training code will output a `.csv` file containing rankings of
+configurations over test set. By default, the csv will be written to:
+```
+~/out/tpugraphs_tiles/results_<timestamp>.csv
+```
+The path can be overridden with flags `--out_dir` and `--results_csv`. Please
+refer to
+[train_args.py](https://github.com/google-research-datasets/tpu_graphs/blob/main/tpu_graphs/baselines/tiles/train_args.py)
 for a list of flags.
 
 #### Sweep hyperparameters
@@ -194,6 +200,26 @@ cannot fit the data into memory. The flag `--max_configs 1000` allows us to run,
 by sampling only this many configurations per graph. However, you may write your
 own scalable implementation, or modify ours, or run
 GST: https://github.com/kaidic/GST.
+
+
+Each (complete) invocation of `python layout_train.py` should do model training,
+followed by inference on the test set. The inference step produces a `csv` file,
+by default on:
+```
+~/out/tpugraphs_layout/results_<timestamp>_<source>_<search>.csv
+```
+As an example: `~/out/tpugraphs_layout/results_1693169615975_xla_default.csv`.
+
+NOTE: on `python combine_csvs.py`: this tool produces the final CSV that can
+be submitted to our
+[Kaggle competition](https://kaggle.com/competitions/predict-ai-model-runtime).
+The tool requires 5 input CSV files
+corresponding to  collections {`tile:xla`, `layout:xla:default`,
+`layout:xla:random`, `layout:nlp:default`, `layout:nlp:random`}. You may
+specify them as flag arguments. By default, `combine_csvs.py` will choose the
+most-recent timestamp files, searching in the default directories produced by
+the training pipelines (i.e. `~/out/tpugraphs_layout` for `layout_train.py`, and
+`~/out/tpugraphs_tiles/` for `tiles_train.py`).
 
 
 ## Dataset File Description
