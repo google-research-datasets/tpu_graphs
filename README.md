@@ -24,7 +24,16 @@ You can use `wget` or `curl` command to download files.
   - {search}: `default` or `random`
   - {split}: `train`, `valid`, or `test`
 
-For example, to copy data for the layout:xla:random collection, run:
+To download all files, you may run (from a clone of this directory):
+
+```sh
+python3 echo_download_commands.py | bash
+```
+
+Removing the last pipe (`| bash`) shows the commands for downloading the dataset
+(a few `curl` commands followed by `tar xvf`).
+
+To copy data for a specific collection, e.g. the layout:xla:random collection, run:
 
 ```sh
 mkdir -p ~/data/tpugraphs
@@ -38,15 +47,8 @@ tar xvf npz_layout_xla_random_valid.tar
 tar xvf npz_layout_xla_random_test.tar
 ```
 
-To download all files, you may run (from a clone of this directory):
-
-```sh
-python3 echo_download_commands.py | bash
-```
-
-Removing the last pipe (`| bash`) shows the commands for downloading the dataset
-(a few `curl` commands followed by `tar xvf`).
-
+For a description of these files, please scroll towards the end of this page
+("Dataset File Description").
 
 ## Running Baseline Models
 
@@ -56,7 +58,9 @@ respectively, for training models on the collections `tile:xla` and
 infer predictions on the test set. By default, the trained models are saved and
 alongside a `csv` file containing inference on the test set.
 
-To combine all five inference files into one `csv`, you can run:
+To combine all five inference files into one CSV to submit to our
+[Kaggle competition](https://kaggle.com/competitions/predict-ai-model-runtime),
+run:
 
 ```sh
 python combine_csvs.py
@@ -65,7 +69,6 @@ python combine_csvs.py
 NOTE: The above command will look for files produced by `tiles_train.py` and
 `layout_train.py`
 
-### Model on `tile:xla` collection
 
 #### Python environment setup with Conda
 
@@ -83,28 +86,8 @@ conda clean --all
 
 For subsequent runs, simply activate the same environment with `conda activate tpugraphs`.
 
-#### Copy dataset files
 
-To run the tiles baselines, you should download the tiles dataset:
-
-```sh
-# Create dataset directory
-mkdir -p ~/data/tpugraphs
-cd ~/data/tpugraphs
-wget http://download.tensorflow.org/data/tpu_graphs/v0/LICENSE > LICENSE
-
-# Copy data from to local dir.
-cd ~/data/tpugraphs
-curl http://download.tensorflow.org/data/tpu_graphs/v0/npz_tile_xla_train.tar > npz_tile_xla_train.tar
-curl http://download.tensorflow.org/data/tpu_graphs/v0/npz_tile_xla_valid.tar > npz_tile_xla_valid.tar
-curl http://download.tensorflow.org/data/tpu_graphs/v0/npz_tile_xla_test.tar > npz_tile_xla_test.tar
-tar xvf npz_tile_xla_train.tar
-tar xvf npz_tile_xla_valid.tar
-tar xvf npz_tile_xla_test.tar
-```
-
-For a description of these files, please scroll towards the end of this page
-("Dataset File Description").
+### Model on `tile:xla` collection
 
 #### Train model
 
@@ -118,9 +101,10 @@ To train on the full dataset, run:
 python tiles_train.py --model=EarlyJoinSAGE
 ```
 
+The current code supports training on a CPU.
 Once the training is done, it will produce a jsonz file with the prefix "run_".
-This file will contain the overall top-K errors on kernels in the validation set.
-To view the result:
+This file will contain the overall top-K errors (see the definition in the paper)
+on kernels in the validation set. To view the result:
 ```
 zcat run_xxx.jsonz > run_xxx.json
 ```
@@ -131,8 +115,8 @@ Search for:
 ```
 where 0.2 error means 20% error.
 
-Further, the training code will output a `.csv` file containing rankings of
-configurations over test set. By default, the csv will be written to:
+Further, the training code will output a `.csv` file containing top-5 rankings
+of configurations over test set. By default, the csv will be written to:
 ```
 ~/out/tpugraphs_tiles/results_<timestamp>.csv
 ```
@@ -172,11 +156,22 @@ This script will print out per-program top-K errors for kernels in the validatio
 }
 ```
 
+Currently, the evaluation script does not produce the ranking `.csv` file.
+
+
 ### Model on `layout:{xla|nlp}:{random|default}` collections
 
-You may run the GST model, which is available at: https://github.com/kaidic/GST.
+You may run the GST model (used in the paper), which is available at:
+https://github.com/kaidic/GST.
+The GST model is built on top of [GraphGPS](https://github.com/rampasek/GraphGPS)
+framework, implemented using PyTorch. It can be trained either on a CPU or GPU.
+The current code does not output the ranking `.csv` file.
 
-You may also run our baseline, by invoking:
+We also provide another baseline for the layout collections
+(implemented after the paper was written) in this repo. It is similar to
+the GST model described in the paper, but implemented using TF-GNN and
+running on a CPU.
+You can train this baseline model by invoking:
 
 ```sh
 # As a test.
@@ -202,20 +197,20 @@ own scalable implementation, or modify ours, or run
 GST: https://github.com/kaidic/GST.
 
 
-Each (complete) invocation of `python layout_train.py` should do model training,
-followed by inference on the test set. The inference step produces a `csv` file,
-by default on:
+Each (complete) invocation of `python layout_train.py` should train the model,
+followed by inference on the test set. The inference step produces a ranking
+`.csv` file, by default at:
 ```
 ~/out/tpugraphs_layout/results_<timestamp>_<source>_<search>.csv
 ```
-As an example: `~/out/tpugraphs_layout/results_1693169615975_xla_default.csv`.
+Example: `~/out/tpugraphs_layout/results_1693169615975_xla_default.csv`.
 
-NOTE: on `python combine_csvs.py`: this tool produces the final CSV that can
+NOTE: You can run `python combine_csvs.py` to produces the final CSV that can
 be submitted to our
 [Kaggle competition](https://kaggle.com/competitions/predict-ai-model-runtime).
 The tool requires 5 input CSV files
-corresponding to  collections {`tile:xla`, `layout:xla:default`,
-`layout:xla:random`, `layout:nlp:default`, `layout:nlp:random`}. You may
+corresponding to  collections `tile:xla`, `layout:xla:default`,
+`layout:xla:random`, `layout:nlp:default`, `layout:nlp:random`. You may
 specify them as flag arguments. By default, `combine_csvs.py` will choose the
 most-recent timestamp files, searching in the default directories produced by
 the training pipelines (i.e. `~/out/tpugraphs_layout` for `layout_train.py`, and
@@ -298,7 +293,7 @@ you may compute your own partitioning (e.g., using METIS) as well.
 
 ### Node Features
 
-To extract a node feature vector, we either copy values from various fields in an XLA’s HLO instruction (a node in an HLO graph) as they are, or convert categorical values using one-hot encoding. To convert an unbounded list of numbers (e.g. tensor shape) to a fixed-size vector, we truncate the list to six elements and include the summation and/or product of all elements in the list (e.g., the product of dimension sizes represents the volume of the tensor). In our dataset, none of the tensors has more than six dimensions. The code for node features extraction can be found [here](https://github.com/google-research-datasets/tpu_graphs/blob/main/tpu_graphs/process_data/xla/featurizers.h#L542).
+To extract a node feature vector, we either copy values from various fields in an XLA’s HLO instruction (a node in an HLO graph) as they are, or convert categorical values using one-hot encoding. To convert an unbounded list of numbers (e.g. tensor shape) to a fixed-size vector, we truncate the list to six elements and include the summation and/or product of all elements in the list (e.g., the product of dimension sizes represents the volume of the tensor). In our dataset, none of the tensors has more than six dimensions.
 
 The following describe each element at a particular index in the node feature vector.
 
