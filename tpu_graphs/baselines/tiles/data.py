@@ -151,20 +151,20 @@ class NpzDatasetPartition:
     self._num_nodes: list[int] = [0]    # ^^
 
     # Populated in `finalize()`.
-    self.node_feat: tf.Tensor | None = None   # indexed by node_ranges.
-    self.node_opcode: tf.Tensor | None = None  # ^^
-    self.edge_index: tf.Tensor | None = None   # indexed by edge_ranges.
-    self.config_feat: tf.Tensor | None = None        # indexed by config_ranges.
-    self.config_runtime: tf.Tensor | None = None     # ^^
-    self.config_runtime_normalizers: tf.Tensor | None = None  # ^^
-    self.tile_id: tf.Tensor | None = None
+    self.node_feat: 'tf.Tensor | None' = None   # indexed by node_ranges.
+    self.node_opcode: 'tf.Tensor | None' = None  # ^^
+    self.edge_index: 'tf.Tensor | None' = None   # indexed by edge_ranges.
+    self.config_feat: 'tf.Tensor | None' = None      # indexed by config_ranges.
+    self.config_runtime: 'tf.Tensor | None' = None   # ^^
+    self.config_runtime_normalizers: 'tf.Tensor | None' = None  # ^^
+    self.tile_id: 'tf.Tensor | None' = None
 
     # finalize() sets to: cumsum([0, numEdges(graph_1), numEdges(graph_2), ..]).
-    self.edge_ranges: tf.Tensor | None = None
+    self.edge_ranges: 'tf.Tensor | None' = None
     # finalize() sets to: cumsum([0, numNodes(graph_1), numNodes(graph_2), ..]).
-    self.node_ranges: tf.Tensor | None = None
+    self.node_ranges: 'tf.Tensor | None' = None
     # finalize() sets to: cumsum([0, numModules(graph_1), nModul(graph_2), ..]).
-    self.config_ranges: tf.Tensor | None = None
+    self.config_ranges: 'tf.Tensor | None' = None
 
   def save_to_file(self, cache_file: str):
     """Saves dataset as numpy. Can be restored with `load_from_file`."""
@@ -378,7 +378,7 @@ class NpzDataset(NamedTuple):
 
 def get_npz_dataset(
     root_path: str, min_train_configs=-1,
-    cache_dir: None | str = None) -> NpzDataset:
+    cache_dir: 'None | str' = None) -> NpzDataset:
   """Returns {train, test, validation} partitions of tiles dataset collection.
 
   All partitions will be normalized: statistics are computed from training set

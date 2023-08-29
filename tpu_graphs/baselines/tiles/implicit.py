@@ -37,7 +37,7 @@ class Multiplier:
     raise NotImplementedError()
 
   @property
-  def shape(self) -> tuple[int|tf.Tensor, int|tf.Tensor]:
+  def shape(self) -> tuple['int|tf.Tensor', 'int|tf.Tensor']:
     raise NotImplementedError()
 
   def __matmul__(self, mat: tf.Tensor) -> tf.Tensor:
@@ -60,7 +60,7 @@ class Multiplier:
     tf.assert_equal(self.shape[0], self.shape[1])
     return Sum(self, DiagMatrix(diag_weight * tf.ones([self.shape[0]])))
 
-  def rowsums(self, replace_if_0: None | float | tf.Tensor = None) -> tf.Tensor:
+  def rowsums(self, replace_if_0: 'None|float|tf.Tensor' = None) -> tf.Tensor:
     """Returns vector with shape `num_rows = [self.shape[0]]` that sums rows.
 
     Args:
@@ -73,7 +73,7 @@ class Multiplier:
       y = tf.where(tf.abs(y) < EPSILON, replace_if_0 * tf.ones_like(y), y)
     return y
 
-  def colsums(self, replace_if_0: None | float | tf.Tensor = None) -> tf.Tensor:
+  def colsums(self, replace_if_0: 'None|float|tf.Tensor' = None) -> tf.Tensor:
     """Returns vector with shape `num_cols = [self.shape[1]]` that sums columns.
 
     Args:
@@ -121,7 +121,7 @@ class Transpose(Multiplier):
     return tf.transpose(self._multiplier @ tf.transpose(mat))
 
   @property
-  def shape(self) -> tuple[int|tf.Tensor, int|tf.Tensor]:
+  def shape(self) -> tuple['int|tf.Tensor', 'int|tf.Tensor']:
     transpose_shape = self._multiplier.shape
     return (transpose_shape[1], transpose_shape[0])
 
@@ -144,7 +144,7 @@ class DiagMatrix(Multiplier):
     return tf.einsum('i,...i->...i', self._diag_vector, mat)
 
   @property
-  def shape(self) -> tuple[int|tf.Tensor, int|tf.Tensor]:
+  def shape(self) -> tuple['int|tf.Tensor', 'int|tf.Tensor']:
     return (self._vec_shape, self._vec_shape)
 
 
@@ -169,7 +169,7 @@ class Product(Multiplier):
     return mat
 
   @property
-  def shape(self) -> tuple[int|tf.Tensor, int|tf.Tensor]:
+  def shape(self) -> tuple['int|tf.Tensor', 'int|tf.Tensor']:
     return (self._multipliers[0].shape[0], self._multipliers[-1].shape[1])
 
 
@@ -190,7 +190,7 @@ class Sum(Multiplier):
     return tf.add_n([mat @ m for m in self._multipliers])
 
   @property
-  def shape(self) -> tuple[int|tf.Tensor, int|tf.Tensor]:
+  def shape(self) -> tuple['int|tf.Tensor', 'int|tf.Tensor']:
     return self._multipliers[0].shape
 
 
@@ -210,7 +210,7 @@ class AdjacencyMultiplier(Multiplier):
 
   def __init__(
       self, graph, edge_set_name: tfgnn.EdgeSetName,
-      edge_weight_feature_name: None|tfgnn.FieldName = None,
+      edge_weight_feature_name: 'None|tfgnn.FieldName' = None,
       sender_tag: tfgnn.IncidentNodeTag = tfgnn.SOURCE):
     tfgnn.check_scalar_graph_tensor(graph, 'AdjacencyMultiplier')
     self._sender_tag = sender_tag
@@ -220,7 +220,7 @@ class AdjacencyMultiplier(Multiplier):
     self._edge_weight_feature_name = edge_weight_feature_name
 
   @property
-  def shape(self) -> tuple[int|tf.Tensor, int|tf.Tensor]:
+  def shape(self) -> tuple['int|tf.Tensor', 'int|tf.Tensor']:
     """Shape is (size of receiver node set, size of sender node set)."""
     adj = self._graph.edge_sets[self._edge_set_name].adjacency
     sender_node_set_name = adj.node_set_name(self._sender_tag)
@@ -256,7 +256,7 @@ class AdjacencyMultiplier(Multiplier):
         feature_value=edge_level))
 
 
-def shape(tensor: tf.Tensor) -> list[int]|tf.Tensor:
+def shape(tensor: tf.Tensor) -> 'list[int]|tf.Tensor':
   """Helper function returns shape of eager or symbolic tensors."""
   if any([s is None for s in tensor.shape]):
     return tf.shape(tensor)

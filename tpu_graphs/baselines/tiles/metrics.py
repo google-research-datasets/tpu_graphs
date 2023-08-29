@@ -100,7 +100,7 @@ class CombinedLoss(tf.keras.losses.Loss):
 
   def __init__(
       self,
-      weighted_losses: None|list[tuple[float, tf.keras.losses.Loss]] = None,
+      weighted_losses: 'None|list[tuple[float, tf.keras.losses.Loss]]' = None,
       reduction=None, name=None):
     super().__init__()
     if weighted_losses is None:

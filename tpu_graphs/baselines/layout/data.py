@@ -232,30 +232,30 @@ class NpzDatasetPartition:
     self._num_node_splits: list[int] = [0]   # ^^
 
     # Populated in `finalize()`.
-    self.node_feat: tf.Tensor | None = None   # indexed by node_ranges.
-    self.node_opcode: tf.Tensor | None = None  # ^^
-    self.edge_index: tf.Tensor | None = None   # indexed by edge_ranges.
-    self.config_runtime: tf.Tensor | None = None  # indexed by config_ranges.
+    self.node_feat: 'tf.Tensor | None' = None   # indexed by node_ranges.
+    self.node_opcode: 'tf.Tensor | None' = None  # ^^
+    self.edge_index: 'tf.Tensor | None' = None   # indexed by edge_ranges.
+    self.config_runtime: 'tf.Tensor | None' = None  # indexed by config_ranges.
     self.argsort_config_runtime: tf.Tensor|None = None  # by flat_config_ranges.
-    self.graph_id: tf.Tensor | None = None
+    self.graph_id: 'tf.Tensor | None' = None
     # indexed by config_ranges and config_node_ranges
-    self.node_config_feat: tf.Tensor | None = None
+    self.node_config_feat: 'tf.Tensor | None' = None
 
     # finalize() sets to: cumsum([0, numEdges(graph_1), numEdges(graph_2), ..]).
-    self.edge_ranges: tf.Tensor | None = None
+    self.edge_ranges: 'tf.Tensor | None' = None
     # finalize() sets to: cumsum([0, numNodes(graph_1), numNodes(graph_2), ..]).
-    self.node_ranges: tf.Tensor | None = None
+    self.node_ranges: 'tf.Tensor | None' = None
     # finalize() sets to: cumsum([0, numConfigs(graph_1), nCfgs(graph_2), ..]).
-    self.config_ranges: tf.Tensor | None = None
+    self.config_ranges: 'tf.Tensor | None' = None
     # finalize() sets to: cumsum([0, numModules(graph_1), nModul(graph_2), ..]).
-    self.config_node_ranges: tf.Tensor | None = None
+    self.config_node_ranges: 'tf.Tensor | None' = None
     # _compute_flat_config_ranges (via finalize() and load_from_file()) sets to:
     # cumsum([0, numConfigs(graph_1) * numModules(graph_1), ... ])
-    self.flat_config_ranges: tf.Tensor | None = None
+    self.flat_config_ranges: 'tf.Tensor | None' = None
 
-    self.node_split_ranges: tf.Tensor | None = None
-    self.node_splits: tf.Tensor | None = None
-    self.node_config_ids: tf.Tensor | None = None
+    self.node_split_ranges: 'tf.Tensor | None' = None
+    self.node_splits: 'tf.Tensor | None' = None
+    self.node_config_ids: 'tf.Tensor | None' = None
 
   def save_to_file(self, cache_file: str):
     """Saves dataset as numpy. Can be restored with `load_from_file`."""
@@ -563,7 +563,7 @@ def get_npz_split(
 
 def get_npz_dataset(
     root_path: str, min_train_configs=-1, max_train_configs=-1,
-    cache_dir: None | str = None) -> NpzDataset:
+    cache_dir: 'None | str' = None) -> NpzDataset:
   """Returns {train, test, validation} partitions of layout dataset collection.
 
   All partitions will be normalized: statistics are computed from training set
