@@ -76,11 +76,11 @@ NOTE: The above command will look for files produced by `tiles_train.py` and
 conda create -n tpugraphs python=3.10
 conda activate tpugraphs
 
-conda install -c conda-forge tensorflow=2.12
+conda install -c conda-forge tensorflow
 conda install -c conda-forge tqdm
 
-pip install tensorflow_gnn==0.5.0
-pip install tensorflow-ranking==0.5.2
+pip install tensorflow_gnn --pre
+pip install tensorflow-ranking
 conda clean --all
 ```
 
