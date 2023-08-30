@@ -56,7 +56,7 @@ _TEST_MODE = flags.DEFINE_enum(
     'file (written in `--out_dir`). If set to "predictions", then csv file '
     'will be written containing predictions.')
 _OUTPUT_DIR = flags.DEFINE_string(
-    'out_dir', '~/out/tpugraphs_tiles',
+    'out_dir', '/kaggle/working/out/tpugraphs_tiles',
     'Output metrics and trained models will be written here.')
 _RESULTS_CSV = flags.DEFINE_string(
     'results_csv', '',
