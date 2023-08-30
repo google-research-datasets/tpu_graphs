@@ -33,7 +33,7 @@ import tqdm
 
 
 _DATA_ROOT = flags.DEFINE_string(
-    'data_root', '~/data/tpugraphs/npz/layout',
+    'data_root', '/kaggle/input/predict-ai-model-runtime/npz_all/npz/layout',
     'Root directory containing dataset. It must contain subdirectories '
     '{train, test, valid}, each having many .npz files')
 _CACHE_DIR = flags.DEFINE_string(
@@ -207,4 +207,3 @@ def train(args: train_args.TrainArgs):
     for graph_id, ranks in test_rankings:
       fout.write(f'layout:{args.source}:{args.search}:{graph_id},{ranks}\n')
   print('\n\n   ***  Wrote', args.results_csv, '\n\n')
-

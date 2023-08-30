@@ -47,7 +47,7 @@ _BATCH = flags.DEFINE_integer(
     'batch', 8,
     'Batch size: number of subgraphs, each with `--configs` configurations.')
 _OUTPUT_DIR = flags.DEFINE_string(
-    'out_dir', '~/out/tpugraphs_layout',
+    'out_dir', '/kaggle/working/out/tpugraphs_layout',
     'Output metrics and trained models will be written here.')
 _RESULTS_CSV = flags.DEFINE_string(
     'results_csv', '',
