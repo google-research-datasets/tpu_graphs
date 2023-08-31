@@ -43,6 +43,24 @@ cc_library(
     ],
 )
 
+cc_library(
+    name = "tuning_data_iterator",
+    srcs = ["tuning_data_iterator.cc"],
+    hdrs = ["tuning_data_iterator.h"],
+    deps = [
+        "//tpu_graphs/proto:tuning_cc_proto",
+        "@com_google_absl//absl/container:flat_hash_map",
+        "@com_google_absl//absl/random",
+        "@com_google_absl//absl/strings",
+        "@com_google_absl//absl/time",
+        "@org_tensorflow//tensorflow/compiler/xla:status",
+        "@org_tensorflow//tensorflow/compiler/xla:statusor",
+        "@org_tensorflow//tensorflow/core:lib",
+        "@org_tensorflow//tensorflow/core/platform:errors",
+        "@org_tensorflow//tensorflow/core/platform:tstring",
+    ],
+)
+
 cc_binary(
     name = "data_main",
     srcs = ["data_main.cc"],
@@ -50,6 +68,7 @@ cc_binary(
         ":featurizers",
         ":hlo_encoder",
         ":hlo_opcode",
+        ":tuning_data_iterator",
         "//tpu_graphs/proto:tuning_cc_proto",
         "@org_tensorflow//tensorflow/core:framework",
         "@org_tensorflow//tensorflow/core:framework_lite",

@@ -1,0 +1,32 @@
+load(
+    "@org_tensorflow//tensorflow:tensorflow.bzl",
+    "tf_gen_op_wrapper_py",
+    "tf_kernel_library",
+)
+
+tf_kernel_library(
+    name = "encode_hlo_tuning_data.so",
+    srcs = ["encode_hlo_tuning_data.cc"],
+    deps = [
+        "//tpu_graphs/process_data/xla:featurizers",
+        "//tpu_graphs/process_data/xla:hlo_encoder",
+        "//tpu_graphs/process_data/xla:hlo_opcode",
+        "//tpu_graphs/process_data/xla:tuning_data_iterator",
+        "//tpu_graphs/proto:tuning_cc_proto",
+        "@org_tensorflow//tensorflow/compiler/xla:statusor",
+        "@org_tensorflow//tensorflow/core:framework",
+        "@org_tensorflow//tensorflow/core:framework_lite",
+        "@org_tensorflow//tensorflow/core:framework_types_hdr",
+        "@org_tensorflow//tensorflow/core:lib",
+    ],
+)
+
+# TODO(mangpo): This is not fully working.
+tf_gen_op_wrapper_py(
+    name = "encode_hlo_tuning_data",
+    out = "encode_hlo_tuning_data.py",
+    op_allowlist = [
+        "EncodeHloTuningData",
+    ],
+    deps = [":encode_hlo_tuning_data.so"],
+)

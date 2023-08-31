@@ -26,7 +26,6 @@ limitations under the License.
 #include "tpu_graphs/process_data/xla/hlo_opcode.h"
 #include "tpu_graphs/process_data/xla/tuning_data_iterator.h"
 #include "tpu_graphs/proto/tuning.pb.h"
-#include "tensorflow/compiler/xla/hlo/ir/hlo_opcode.h"
 #include "tensorflow/compiler/xla/statusor.h"
 #include "tensorflow/core/framework/op.h"
 #include "tensorflow/core/framework/op_kernel.h"
@@ -55,7 +54,6 @@ class EncodeHloTuningData : public tf::OpKernel {
  public:
   explicit EncodeHloTuningData(tf::OpKernelConstruction* context)
       : tf::OpKernel(context) {
-    CHECK(HloOpcodeCount() <= std::numeric_limits<uint8_t>::max());
     OP_REQUIRES_OK(context, context->GetAttr("directed", &directed_));
     OP_REQUIRES_OK(context, context->GetAttr("take_every", &take_every_));
     OP_REQUIRES(context, take_every_ >= 1,

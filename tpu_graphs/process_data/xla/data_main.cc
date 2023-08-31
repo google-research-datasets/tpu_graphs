@@ -1,13 +1,16 @@
 #include <cstdint>
 #include <iostream>
+#include <memory>
 #include <vector>
 
 #include "tpu_graphs/process_data/xla/featurizers.h"
 #include "tpu_graphs/process_data/xla/hlo_encoder.h"
 #include "tpu_graphs/process_data/xla/hlo_opcode.h"
+#include "tpu_graphs/process_data/xla/tuning_data_iterator.h"
 #include "tensorflow/core/framework/tensor.h"
 #include "tensorflow/core/framework/tensor_shape.h"
 #include "tensorflow/core/framework/tensor_types.h"
+#include "tensorflow/core/platform/env.h"
 
 namespace xla {
 namespace ml_lib {
@@ -43,11 +46,25 @@ void TestDenseNeighborIndicesBuilderOnOneGraphOneNode() {
   CHECK_EQ(neighbor_masks.matrix<float>()(0, 0), 0);
 }
 
+void TestModuleTuningDataNoFilter() {
+  std::cout << "TestModuleTuningDataNoFilter\n";
+  const std::string source_path = "/tmp/module_tuning_data_layout.pb";
+  tpu_graphs::ModuleTuningData proto_data;
+  CHECK(tf::ReadBinaryProto(tf::Env::Default(), source_path, &proto_data).ok());
+
+  std::unique_ptr<TuningDataIterator> data_iterator =
+      CreateTuningDataIterator(kModuleTuning, source_path).value();
+  CHECK(data_iterator != nullptr);
+  std::cout << "Size: " << data_iterator->Name() << "\n";
+  std::cout << "Sample count: " << data_iterator->GetSampleCount() << "\n";
+}
+
 }  // namespace ml_lib
 }  // namespace xla
 
 int main(int argc, char* argv[]) {
   xla::ml_lib::TestFeaturizeTileSizeConfig();
   xla::ml_lib::TestDenseNeighborIndicesBuilderOnOneGraphOneNode();
+  xla::ml_lib::TestModuleTuningDataNoFilter();
   return 0;
 }

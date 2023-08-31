@@ -31,13 +31,14 @@ limitations under the License.
 #include "tensorflow/compiler/xla/status.h"
 #include "tensorflow/compiler/xla/statusor.h"
 #include "tensorflow/compiler/xla/xla_data.pb.h"
+#include "tensorflow/core/platform/env.h"
 #include "tensorflow/core/platform/errors.h"
+#include "tensorflow/core/platform/fingerprint.h"
 #include "tensorflow/core/platform/tstring.h"
-#include "tensorflow/tsl/platform/env.h"
-#include "tensorflow/tsl/platform/fingerprint.h"
 
 namespace xla {
-namespace ml_cost_model {
+
+namespace tf = ::tensorflow;
 
 StatusOr<std::unique_ptr<TuningDataIterator>> CreateTuningDataIterator(
     TuningDataType type, const tf::tstring& source_path,
@@ -65,38 +66,30 @@ StatusOr<std::unique_ptr<TuningDataIterator>> CreateTuningDataIterator(
 
 Status ModuleTuningDataIterator::LoadData(const tf::tstring& source_path,
                                           const tf::tstring& proto_data) {
-  tpu_graphs::ModuleTuningData* module_tuning_data;
   if (proto_data.empty()) {
     LOG(INFO) << "proto_data is empty. Reading from source_path: "
               << source_path;
-    module_tuning_data =
-        google::protobuf::Arena::CreateMessage<tpu_graphs::ModuleTuningData>(&arena_);
-    TF_RETURN_IF_ERROR(tsl::ReadBinaryProto(tsl::Env::Default(), source_path,
-                                            module_tuning_data));
+    TF_RETURN_IF_ERROR(tf::ReadBinaryProto(tf::Env::Default(), source_path,
+                                           &module_tuning_data_));
   } else {
-    module_tuning_data =
-        google::protobuf::Arena::CreateMessage<tpu_graphs::ModuleTuningData>(&arena_);
-    if (!module_tuning_data->ParseFromArray(proto_data.data(),
+    if (!module_tuning_data_.ParseFromArray(proto_data.data(),
                                             proto_data.size())) {
-      return tf::errors::InvalidArgument(absl::StrCat(
-          "Couldn't parse input protobuf as ModuleTuningData (input length "
-          "was ",
-          proto_data.length(), (source_path.empty() ? "" : "; path: "),
-          source_path, ")"));
+      return tf::errors::InvalidArgument(
+          "Couldn't parse input protobuf as ModuleTuningData.");
     }
   }
 
   // Read in HLO module.
-  hlo_module_proto_ = module_tuning_data->mutable_module();
-  CHECK_GT(module_tuning_data->config_index_to_node_size(), 0);
+  hlo_module_proto_ = module_tuning_data_.mutable_module();
+  CHECK_GT(module_tuning_data_.config_index_to_node_size(), 0);
   config_index_to_node_.reserve(
-      module_tuning_data->config_index_to_node_size());
-  for (const auto& id : module_tuning_data->config_index_to_node()) {
+      module_tuning_data_.config_index_to_node_size());
+  for (const auto& id : module_tuning_data_.config_index_to_node()) {
     config_index_to_node_.push_back(id);
   }
 
-  config_profiles_.reserve(module_tuning_data->runs_size());
-  for (const auto& run : module_tuning_data->runs()) {
+  config_profiles_.reserve(module_tuning_data_.runs_size());
+  for (const auto& run : module_tuning_data_.runs()) {
     if (run.has_module_config() && !run.error() && run.has_profile()) {
       config_profiles_.push_back(&run);
       CHECK_GT(run.profile().compute_time_ns(), 0);
@@ -121,7 +114,7 @@ Status ModuleTuningDataIterator::LoadData(const tf::tstring& source_path,
 
   // Compute fingerprint according to source path. Same graph with different
   // paths won't have the same fingerprint.
-  fingerprint_ = tsl::Fingerprint64(source_path);
+  fingerprint_ = tf::Fingerprint64(source_path);
 
   // TODO: Support up-down sampling.
   // if (batch_size_) {
@@ -228,25 +221,19 @@ std::vector<std::vector<int>> ModuleTuningDataIterator::GetModuleConfigValues()
 
 Status OpTuningDataIterator::LoadData(const tf::tstring& source_path,
                                       const tf::tstring& proto_data) {
-  tpu_graphs::TuningData* tuning_data;
   if (proto_data.empty()) {
     LOG(INFO) << "proto_data is empty. Reading from source_path: "
               << source_path;
-    tuning_data = google::protobuf::Arena::CreateMessage<tpu_graphs::TuningData>(&arena_);
     TF_RETURN_IF_ERROR(
-        tsl::ReadBinaryProto(tsl::Env::Default(), source_path, tuning_data));
+        tf::ReadBinaryProto(tf::Env::Default(), source_path, &tuning_data_));
   } else {
-    tuning_data = google::protobuf::Arena::CreateMessage<tpu_graphs::TuningData>(&arena_);
-    if (!tuning_data->ParseFromArray(proto_data.data(), proto_data.size())) {
-      return tf::errors::InvalidArgument(absl::StrCat(
-          "Couldn't parse input protobuf as ModuleTuningData (input length "
-          "was ",
-          proto_data.length(), (source_path.empty() ? "" : "; path: "),
-          source_path, ")"));
+    if (!tuning_data_.ParseFromArray(proto_data.data(), proto_data.size())) {
+      return tf::errors::InvalidArgument(
+          "Couldn't parse input protobuf as ModuleTuningData.");
     }
   }
 
-  for (auto& module_tuning_data : *tuning_data->mutable_modules()) {
+  for (auto& module_tuning_data : *tuning_data_.mutable_modules()) {
     if (module_tuning_data.runs_size() > 1) {
       TF_RETURN_IF_ERROR(LoadModuleTuningProto(&module_tuning_data));
     }
@@ -256,7 +243,6 @@ Status OpTuningDataIterator::LoadData(const tf::tstring& source_path,
 
 Status OpTuningDataIterator::LoadModuleTuningProto(
     tpu_graphs::ModuleTuningData* module_tuning_data) {
-  HloModuleProto* hlo_module_proto = nullptr;
   // Read in HLO module.
   if (!module_tuning_data->has_module()) {
     return OkStatus();
@@ -268,9 +254,7 @@ Status OpTuningDataIterator::LoadModuleTuningProto(
       return OkStatus();
     }
   }
-  hlo_module_proto = module_tuning_data->release_module();
-  // Transfer ownership to arena.
-  arena_.Own(hlo_module_proto);
+  const HloModuleProto* hlo_module_proto = &module_tuning_data->module();
 
   // Skip modules that have empty tile size configs.
   for (const auto& config : module_tuning_data->runs()) {
@@ -404,5 +388,4 @@ TuningDataIterator::SampleStats OpTuningDataIterator::GetSampleStats() const {
           static_cast<int64_t>(config_data_[op_idx_].size())};
 }
 
-}  // namespace ml_cost_model
 }  // namespace xla

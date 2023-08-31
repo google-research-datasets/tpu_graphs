@@ -24,16 +24,15 @@ limitations under the License.
 #include <vector>
 
 #include "absl/container/flat_hash_map.h"
-#include "absl/log/check.h"
 #include "absl/strings/string_view.h"
 #include "tpu_graphs/proto/tuning.pb.h"
 #include "tensorflow/compiler/xla/service/hlo.pb.h"
 #include "tensorflow/compiler/xla/status.h"
 #include "tensorflow/compiler/xla/statusor.h"
+#include "tensorflow/core/platform/errors.h"
 #include "tensorflow/core/platform/tstring.h"
 
 namespace xla {
-namespace ml_cost_model {
 
 namespace tf = ::tensorflow;
 
@@ -163,7 +162,6 @@ class TuningDataIterator {
   }
 
  protected:
-  google::protobuf::Arena arena_;
   tf::tstring source_path_;
   const std::optional<std::pair<uint64_t, uint64_t>> fingerprint_range_;
   const int batch_size_;
@@ -231,6 +229,7 @@ class ModuleTuningDataIterator : public TuningDataIterator {
   void Subsample(const int take_every, const float sample_rate,
                  const float samples_limit) override;
 
+  tpu_graphs::ModuleTuningData module_tuning_data_;
   int64_t idx_ = 0;
   std::vector<const tpu_graphs::ConfigProfile*> config_profiles_;
   int64_t config_profiles_size_;
@@ -271,6 +270,7 @@ class OpTuningDataIterator : public TuningDataIterator {
   Status LoadModuleTuningProto(
       tpu_graphs::ModuleTuningData* module_tuning_data);
 
+  tpu_graphs::TuningData tuning_data_;
   int64_t op_idx_ = 0;
   int64_t config_idx_ = 0;
   int64_t size_ = 0;
@@ -283,7 +283,6 @@ class OpTuningDataIterator : public TuningDataIterator {
   std::vector<std::vector<const tpu_graphs::ConfigProfile*>> config_data_;
 };
 
-}  // namespace ml_cost_model
 }  // namespace xla
 
 #endif  // THIRD_PARTY_PY_TPU_GRAPHS_PROCESS_DATA_XLA_TUNING_DATA_ITERATOR_H_
