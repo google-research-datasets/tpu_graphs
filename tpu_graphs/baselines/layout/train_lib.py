@@ -152,7 +152,7 @@ def train(args: train_args.TrainArgs):
       best_params = {v.ref: v + 0 for v in model.trainable_variables}
       logging.info(' * [@%i] Validation (NEW BEST): %s', i, str(val_opa))
       # Write model and train metrics (in `run_info`).
-      save_model(model, run_info, out_dir, args)
+      # save_model(model, run_info, out_dir, args)
     elif args.early_stop > 0 and i - best_val_at_epoch >= args.early_stop:
       logging.info('[@%i] Best accuracy was attained at epoch %i. Stopping.',
                    i, best_val_at_epoch)
