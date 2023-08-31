@@ -203,7 +203,7 @@ def train(args: train_args.TrainArgs):
     test_rankings.append((graph_id, sorted_indices))
 
   with tf.io.gfile.GFile(args.results_csv, 'w') as fout:
-    fout.write('ID,TopConfigs\n')
+    #fout.write('ID,TopConfigs\n')
     for graph_id, ranks in test_rankings:
       fout.write(f'layout:{args.source}:{args.search}:{graph_id},{ranks}\n')
   print('\n\n   ***  Wrote', args.results_csv, '\n\n')
