@@ -13,7 +13,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 ==============================================================================*/
 
-#include "third_party/py/tpu_graphs/process_data/xla/hlo_encoder.h"
+#include "tpu_graphs/process_data/xla/hlo_encoder.h"
 
 #include <algorithm>
 #include <cstdint>
@@ -22,20 +22,19 @@ limitations under the License.
 #include <optional>
 #include <vector>
 
-#include "third_party/absl/container/flat_hash_map.h"
-#include "third_party/absl/strings/match.h"
-#include "third_party/eigen3/unsupported/Eigen/CXX11/Tensor"
-#include "third_party/py/tpu_graphs/process_data/xla/featurizers.h"
-#include "third_party/py/tpu_graphs/process_data/xla/hlo_opcode.h"
-#include "third_party/py/tpu_graphs/proto/tuning.proto.h"
-#include "third_party/tensorflow/compiler/xla/hlo/ir/hlo_module.h"
-#include "third_party/tensorflow/compiler/xla/service/hlo.proto.h"
-#include "third_party/tensorflow/compiler/xla/status.h"
-#include "third_party/tensorflow/core/framework/op_kernel.h"
-#include "third_party/tensorflow/core/framework/tensor.h"
-#include "third_party/tensorflow/core/framework/tensor_shape.h"
-#include "third_party/tensorflow/core/framework/tensor_types.h"
-#include "third_party/tensorflow/core/util/sparse/sparse_tensor.h"
+#include "absl/container/flat_hash_map.h"
+#include "absl/strings/match.h"
+#include "tpu_graphs/process_data/xla/featurizers.h"
+#include "tpu_graphs/process_data/xla/hlo_opcode.h"
+#include "tpu_graphs/proto/tuning.pb.h"
+#include "tensorflow/compiler/xla/service/hlo.pb.h"
+#include "tensorflow/compiler/xla/status.h"
+#include "tensorflow/core/framework/op_kernel.h"
+#include "tensorflow/core/framework/tensor.h"
+#include "tensorflow/core/framework/tensor_shape.h"
+#include "tensorflow/core/framework/tensor_types.h"
+#include "tensorflow/core/platform/statusor.h"
+#include "tensorflow/core/util/sparse/sparse_tensor.h"
 
 namespace xla {
 namespace ml_lib {
@@ -45,12 +44,12 @@ namespace sparse = ::tensorflow::sparse;
 
 namespace {
 // Returns a map from computation IDs to their entry instruction IDs.
-absl::flat_hash_map<typeof(HloComputationProto().id()),
-                    typeof(HloInstructionProto().id())>
+absl::flat_hash_map<__typeof__(HloComputationProto().id()),
+                    __typeof__(HloInstructionProto().id())>
 CollectComputationEntries(
-    const proto2::RepeatedPtrField<HloComputationProto>& computations) {
-  absl::flat_hash_map<typeof(HloComputationProto().id()),
-                      typeof(HloInstructionProto().id())>
+    const google::protobuf::RepeatedPtrField<HloComputationProto>& computations) {
+  absl::flat_hash_map<__typeof__(HloComputationProto().id()),
+                      __typeof__(HloInstructionProto().id())>
       entries;
   entries.reserve(computations.size());
   for (const auto& computation : computations) {
@@ -108,7 +107,7 @@ bool SparseTensorIndicesAreUnique(tf::Tensor* indices) {
 }  // namespace
 
 std::vector<int64_t> DeduplicateField(
-    const ::proto2::RepeatedField<int64_t>& source) {
+    const ::google::protobuf::RepeatedField<int64_t>& source) {
   std::vector<int64_t> vec(source.cbegin(), source.cend());
   std::sort(vec.begin(), vec.end());
   vec.erase(std::unique(vec.begin(), vec.end()), vec.end());
@@ -583,7 +582,7 @@ void HloEncoder::CollectStats(const HloComputationProto& computation,
   }
 }
 
-tsl::StatusOr<int> SparseHloEncoder::CreateOutputBuilders(
+tf::StatusOr<int> SparseHloEncoder::CreateOutputBuilders(
     const HloModuleStat& stat, tf::OpKernelContext* context) {
   const int module_count = stat.identifier_vocabs.size();
   Outputs output_tensors;

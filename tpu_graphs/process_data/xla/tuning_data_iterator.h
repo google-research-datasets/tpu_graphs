@@ -23,14 +23,14 @@ limitations under the License.
 #include <utility>
 #include <vector>
 
-#include "third_party/absl/container/flat_hash_map.h"
-#include "third_party/absl/log/check.h"
-#include "third_party/absl/strings/string_view.h"
-#include "third_party/py/tpu_graphs/proto/tuning.proto.h"
-#include "third_party/tensorflow/compiler/xla/service/hlo.proto.h"
-#include "third_party/tensorflow/compiler/xla/status.h"
-#include "third_party/tensorflow/compiler/xla/statusor.h"
-#include "third_party/tensorflow/core/platform/tstring.h"
+#include "absl/container/flat_hash_map.h"
+#include "absl/log/check.h"
+#include "absl/strings/string_view.h"
+#include "tpu_graphs/proto/tuning.pb.h"
+#include "tensorflow/compiler/xla/service/hlo.pb.h"
+#include "tensorflow/compiler/xla/status.h"
+#include "tensorflow/compiler/xla/statusor.h"
+#include "tensorflow/core/platform/tstring.h"
 
 namespace xla {
 namespace ml_cost_model {
@@ -163,7 +163,7 @@ class TuningDataIterator {
   }
 
  protected:
-  proto2::Arena arena_;
+  google::protobuf::Arena arena_;
   tf::tstring source_path_;
   const std::optional<std::pair<uint64_t, uint64_t>> fingerprint_range_;
   const int batch_size_;

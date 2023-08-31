@@ -16,49 +16,46 @@ limitations under the License.
 #ifndef THIRD_PARTY_PY_TPU_GRAPHS_PROCESS_DATA_XLA_FEATURIZERS_H_
 #define THIRD_PARTY_PY_TPU_GRAPHS_PROCESS_DATA_XLA_FEATURIZERS_H_
 
-#include <array>
 #include <cstdint>
 #include <functional>
 #include <memory>
 #include <string>
 #include <utility>
+#include <vector>
 
-#include "third_party/absl/memory/memory.h"
-#include "third_party/absl/strings/str_cat.h"
-#include "third_party/absl/strings/str_format.h"
-#include "third_party/absl/strings/string_view.h"
-#include "third_party/py/tpu_graphs/process_data/xla/hlo_opcode.h"
-#include "third_party/py/tpu_graphs/proto/tuning.proto.h"
-#include "third_party/tensorflow/compiler/xla/service/hlo.proto.h"
-#include "third_party/tensorflow/compiler/xla/types.h"
-#include "third_party/tensorflow/compiler/xla/xla_data.proto.h"
-#include "util/gtl/array.h"
+#include "absl/strings/str_cat.h"
+#include "absl/strings/str_format.h"
+#include "absl/strings/string_view.h"
+#include "google/protobuf/repeated_field.h"
+#include "tpu_graphs/process_data/xla/hlo_opcode.h"
+#include "tpu_graphs/proto/tuning.pb.h"
+#include "tensorflow/compiler/xla/service/hlo.pb.h"
+#include "tensorflow/compiler/xla/xla_data.pb.h"
 
 namespace xla {
 namespace ml_lib {
 
-inline constexpr auto PRIMITIVE_TYPE_FEATURES = gtl::to_array<
-    const std::pair<const PrimitiveType, const absl::string_view>>({
-    {PRIMITIVE_TYPE_INVALID, "is_invalid_type"},
-    {PRED, "is_pred"},
-    {S8, "is_s8"},
-    {S16, "is_s16"},
-    {S32, "is_s32"},
-    {S64, "is_s64"},
-    {U8, "is_u8"},
-    {U16, "is_u16"},
-    {U32, "is_u32"},
-    {U64, "is_u64"},
-    {F16, "is_f16"},
-    {F32, "is_f32"},
-    {F64, "is_f64"},
-    {BF16, "is_bf16"},
-    {C64, "is_c64"},
-    {C128, "is_c128"},
-    {TUPLE, "is_tuple"},
-    {OPAQUE_TYPE, "is_opaque_type"},
-    {TOKEN, "is_token"},
-});
+static const std::vector<
+    std::pair<const PrimitiveType, const absl::string_view>>
+    kPrimitiveTypeFeatures = {{PRIMITIVE_TYPE_INVALID, "is_invalid_type"},
+                              {PRED, "is_pred"},
+                              {S8, "is_s8"},
+                              {S16, "is_s16"},
+                              {S32, "is_s32"},
+                              {S64, "is_s64"},
+                              {U8, "is_u8"},
+                              {U16, "is_u16"},
+                              {U32, "is_u32"},
+                              {U64, "is_u64"},
+                              {F16, "is_f16"},
+                              {F32, "is_f32"},
+                              {F64, "is_f64"},
+                              {BF16, "is_bf16"},
+                              {C64, "is_c64"},
+                              {C128, "is_c128"},
+                              {TUPLE, "is_tuple"},
+                              {OPAQUE_TYPE, "is_opaque_type"},
+                              {TOKEN, "is_token"}};
 
 template <uint8_t LeadingNumbers, typename Dest>
 void NamesForFixedNumericSequenceFeatures(Dest* out,
@@ -121,7 +118,7 @@ void NamesForFixedNumericSequenceFeaturesNoAggregate(
   }
 }
 
-// Similar to `FixedNumericSequenceFeatures` but don't produce sum and prodcut.
+// Similar to `FixedNumericSequenceFeatures` but don't produce sum and product.
 template <uint8_t LeadingNumbers, typename Container, typename Dest>
 void FixedNumericSequenceFeaturesNoAggregate(
     Dest* out, const Container& source,
@@ -339,11 +336,11 @@ FEATURIZE_FUNCTION_PAIR(
       // inferred.
     })
 
-// Turns a `proto2::RepeatedPtrField` of `xla::SliceDimensions` protobufs into a
+// Turns a `google::protobuf::RepeatedPtrField` of `xla::SliceDimensions` protobufs into a
 // vector of features suitable for input to a machine learning model.
 FEATURIZE_FUNCTION_PAIR(
     FeaturizeSliceDimensions,
-    proto2::RepeatedPtrField<HloInstructionProto::SliceDimensions>, {
+    google::protobuf::RepeatedPtrField<HloInstructionProto::SliceDimensions>, {
       FEATURIZE_DISPATCH(
           FixedNumericSequenceFeatures<2>, "start", source,
           [](const HloInstructionProto::SliceDimensions& s) {
@@ -515,8 +512,8 @@ FEATURIZE_FUNCTION_PAIR_PTR(
 // describing the given `xla::PrimitiveType`. In particular, a one-hot encoding
 // is used.
 FEATURIZE_FUNCTION_PAIR(FeaturizePrimitiveType, PrimitiveType, {
-  for (int idx = 0; idx < PRIMITIVE_TYPE_FEATURES.size(); ++idx) {
-    const auto& pair = PRIMITIVE_TYPE_FEATURES[idx];
+  for (int idx = 0; idx < kPrimitiveTypeFeatures.size(); ++idx) {
+    const auto& pair = kPrimitiveTypeFeatures[idx];
     out->push_back(
         FEATURIZE_SWITCH(pair.second, (pair.first == source ? 1. : 0)));
   }

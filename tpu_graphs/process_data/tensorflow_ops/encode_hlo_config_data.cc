@@ -21,18 +21,18 @@ limitations under the License.
 #include <utility>
 #include <vector>
 
-#include "third_party/py/tpu_graphs/process_data/xla/hlo_opcode.h"
-#include "third_party/py/tpu_graphs/process_data/xla/tuning_data_iterator.h"
-#include "third_party/tensorflow/compiler/xla/hlo/ir/hlo_opcode.h"
-#include "third_party/tensorflow/compiler/xla/statusor.h"
-#include "third_party/tensorflow/core/framework/op.h"
-#include "third_party/tensorflow/core/framework/op_kernel.h"
-#include "third_party/tensorflow/core/framework/shape_inference.h"
-#include "third_party/tensorflow/core/framework/tensor.h"
-#include "third_party/tensorflow/core/framework/tensor_types.h"
-#include "third_party/tensorflow/core/framework/types.h"
-#include "third_party/tensorflow/core/lib/core/errors.h"
-#include "third_party/tensorflow/core/lib/core/status.h"
+#include "tpu_graphs/process_data/xla/hlo_opcode.h"
+#include "tpu_graphs/process_data/xla/tuning_data_iterator.h"
+#include "tensorflow/compiler/xla/hlo/ir/hlo_opcode.h"
+#include "tensorflow/compiler/xla/statusor.h"
+#include "tensorflow/core/framework/op.h"
+#include "tensorflow/core/framework/op_kernel.h"
+#include "tensorflow/core/framework/shape_inference.h"
+#include "tensorflow/core/framework/tensor.h"
+#include "tensorflow/core/framework/tensor_types.h"
+#include "tensorflow/core/framework/types.h"
+#include "tensorflow/core/lib/core/errors.h"
+#include "tensorflow/core/lib/core/status.h"
 
 namespace xla {
 namespace ml_cost_model {

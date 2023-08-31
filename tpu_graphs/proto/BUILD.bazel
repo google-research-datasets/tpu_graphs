@@ -1,0 +1,26 @@
+load("@com_google_protobuf//:protobuf.bzl", "py_proto_library")
+
+package(
+    default_visibility = ["//visibility:public"],
+)
+
+licenses(["notice"])
+
+proto_library(
+    name = "tuning_proto",
+    srcs = ["tuning.proto"],
+    deps = [
+        "@org_tensorflow//tensorflow/compiler/xla:xla_data_proto",
+        "@org_tensorflow//tensorflow/compiler/xla/service:hlo_proto",
+    ],
+)
+
+cc_proto_library(
+    name = "tuning_cc_proto",
+    deps = [":tuning_proto"],
+)
+
+py_proto_library(
+    name = "tuning_py_pb2",
+    deps = [":tuning_proto"],
+)

@@ -13,7 +13,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 ==============================================================================*/
 
-#include "third_party/py/tpu_graphs/process_data/xla/tuning_data_iterator.h"
+#include "tpu_graphs/process_data/xla/tuning_data_iterator.h"
 
 #include <algorithm>
 #include <cstdint>
@@ -23,18 +23,18 @@ limitations under the License.
 #include <utility>
 #include <vector>
 
-#include "third_party/absl/random/random.h"
-#include "third_party/absl/strings/str_cat.h"
-#include "third_party/absl/time/time.h"
-#include "third_party/py/tpu_graphs/proto/tuning.proto.h"
-#include "third_party/tensorflow/compiler/xla/service/hlo.proto.h"
-#include "third_party/tensorflow/compiler/xla/status.h"
-#include "third_party/tensorflow/compiler/xla/statusor.h"
-#include "third_party/tensorflow/compiler/xla/xla_data.proto.h"
-#include "third_party/tensorflow/core/platform/errors.h"
-#include "third_party/tensorflow/core/platform/tstring.h"
-#include "third_party/tensorflow/tsl/platform/env.h"
-#include "third_party/tensorflow/tsl/platform/fingerprint.h"
+#include "absl/random/random.h"
+#include "absl/strings/str_cat.h"
+#include "absl/time/time.h"
+#include "tpu_graphs/proto/tuning.pb.h"
+#include "tensorflow/compiler/xla/service/hlo.pb.h"
+#include "tensorflow/compiler/xla/status.h"
+#include "tensorflow/compiler/xla/statusor.h"
+#include "tensorflow/compiler/xla/xla_data.pb.h"
+#include "tensorflow/core/platform/errors.h"
+#include "tensorflow/core/platform/tstring.h"
+#include "tensorflow/tsl/platform/env.h"
+#include "tensorflow/tsl/platform/fingerprint.h"
 
 namespace xla {
 namespace ml_cost_model {
@@ -70,12 +70,12 @@ Status ModuleTuningDataIterator::LoadData(const tf::tstring& source_path,
     LOG(INFO) << "proto_data is empty. Reading from source_path: "
               << source_path;
     module_tuning_data =
-        proto2::Arena::CreateMessage<tpu_graphs::ModuleTuningData>(&arena_);
+        google::protobuf::Arena::CreateMessage<tpu_graphs::ModuleTuningData>(&arena_);
     TF_RETURN_IF_ERROR(tsl::ReadBinaryProto(tsl::Env::Default(), source_path,
                                             module_tuning_data));
   } else {
     module_tuning_data =
-        proto2::Arena::CreateMessage<tpu_graphs::ModuleTuningData>(&arena_);
+        google::protobuf::Arena::CreateMessage<tpu_graphs::ModuleTuningData>(&arena_);
     if (!module_tuning_data->ParseFromArray(proto_data.data(),
                                             proto_data.size())) {
       return tf::errors::InvalidArgument(absl::StrCat(
@@ -232,11 +232,11 @@ Status OpTuningDataIterator::LoadData(const tf::tstring& source_path,
   if (proto_data.empty()) {
     LOG(INFO) << "proto_data is empty. Reading from source_path: "
               << source_path;
-    tuning_data = proto2::Arena::CreateMessage<tpu_graphs::TuningData>(&arena_);
+    tuning_data = google::protobuf::Arena::CreateMessage<tpu_graphs::TuningData>(&arena_);
     TF_RETURN_IF_ERROR(
         tsl::ReadBinaryProto(tsl::Env::Default(), source_path, tuning_data));
   } else {
-    tuning_data = proto2::Arena::CreateMessage<tpu_graphs::TuningData>(&arena_);
+    tuning_data = google::protobuf::Arena::CreateMessage<tpu_graphs::TuningData>(&arena_);
     if (!tuning_data->ParseFromArray(proto_data.data(), proto_data.size())) {
       return tf::errors::InvalidArgument(absl::StrCat(
           "Couldn't parse input protobuf as ModuleTuningData (input length "

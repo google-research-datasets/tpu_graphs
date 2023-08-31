@@ -22,24 +22,25 @@ limitations under the License.
 #include <string>
 #include <vector>
 
-#include "third_party/absl/container/flat_hash_map.h"
-#include "third_party/absl/strings/string_view.h"
-#include "third_party/py/tpu_graphs/process_data/xla/hlo_opcode.h"
-#include "third_party/py/tpu_graphs/proto/tuning.proto.h"
-#include "third_party/tensorflow/compiler/xla/service/hlo.proto.h"
-#include "third_party/tensorflow/compiler/xla/status.h"
-#include "third_party/tensorflow/core/framework/op_kernel.h"
-#include "third_party/tensorflow/core/framework/tensor.h"
+#include "absl/container/flat_hash_map.h"
+#include "absl/strings/string_view.h"
+#include "tpu_graphs/process_data/xla/hlo_opcode.h"
+#include "tpu_graphs/proto/tuning.pb.h"
+#include "tensorflow/compiler/xla/service/hlo.pb.h"
+#include "tensorflow/compiler/xla/status.h"
+#include "tensorflow/core/framework/op_kernel.h"
+#include "tensorflow/core/framework/tensor.h"
+#include "tensorflow/core/platform/statusor.h"
 
 namespace xla {
 namespace ml_lib {
 
 namespace tf = ::tensorflow;
 
-// Returns a vector with the contents of the proto2::RepeatedField `source`
+// Returns a vector with the contents of the google::protobuf::RepeatedField `source`
 // sorted and with duplicates removed.
 std::vector<int64_t> DeduplicateField(
-    const ::proto2::RepeatedField<int64_t>& source);
+    const ::google::protobuf::RepeatedField<int64_t>& source);
 
 // An interface class for incrementally constructing tensors for HLO graph.
 //
@@ -377,8 +378,8 @@ class SparseHloEncoder : public HloEncoder {
   // used as the underlying storage for the builders.
   //
   // Return the number of outputs allocated in context.
-  tsl::StatusOr<int> CreateOutputBuilders(const HloModuleStat& stat,
-                                          tf::OpKernelContext* context);
+  tf::StatusOr<int> CreateOutputBuilders(const HloModuleStat& stat,
+                                         tf::OpKernelContext* context);
 
  private:
   struct Outputs {

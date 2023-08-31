@@ -1,0 +1,58 @@
+package(
+    default_visibility = ["//visibility:public"],
+)
+
+licenses(["notice"])
+
+cc_library(
+    name = "hlo_opcode",
+    hdrs = ["hlo_opcode.h"],
+    deps = [
+        "@com_google_absl//absl/container:flat_hash_map",
+        "@com_google_absl//absl/strings",
+    ],
+)
+
+cc_library(
+    name = "featurizers",
+    hdrs = ["featurizers.h"],
+    deps = [
+        ":hlo_opcode",
+        "//tpu_graphs/proto:tuning_cc_proto",
+        "@com_google_absl//absl/memory",
+        "@com_google_absl//absl/strings",
+        "@com_google_absl//absl/strings:str_format",
+        "@com_google_protobuf//:protobuf",
+    ],
+)
+
+cc_library(
+    name = "hlo_encoder",
+    srcs = ["hlo_encoder.cc"],
+    hdrs = ["hlo_encoder.h"],
+    deps = [
+        ":featurizers",
+        ":hlo_opcode",
+        "//tpu_graphs/proto:tuning_cc_proto",
+        "@com_google_absl//absl/container:flat_hash_map",
+        "@com_google_absl//absl/strings",
+        "@org_tensorflow//tensorflow/compiler/xla:status",
+        "@org_tensorflow//tensorflow/core:framework",
+        "@org_tensorflow//tensorflow/core:framework_lite",
+        "@org_tensorflow//tensorflow/core/platform:statusor",
+    ],
+)
+
+cc_binary(
+    name = "data_main",
+    srcs = ["data_main.cc"],
+    deps = [
+        ":featurizers",
+        ":hlo_encoder",
+        ":hlo_opcode",
+        "//tpu_graphs/proto:tuning_cc_proto",
+        "@org_tensorflow//tensorflow/core:framework",
+        "@org_tensorflow//tensorflow/core:framework_lite",
+        "@org_tensorflow//tensorflow/core:protos_all_cc",
+    ],
+)

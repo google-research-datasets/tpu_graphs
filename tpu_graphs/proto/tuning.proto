@@ -17,8 +17,8 @@ syntax = "proto3";
 
 package tpu_graphs;
 
-import "third_party/tensorflow/compiler/xla/service/hlo.proto";
-import "third_party/tensorflow/compiler/xla/xla_data.proto";
+import "tensorflow/compiler/xla/service/hlo.proto";
+import "tensorflow/compiler/xla/xla_data.proto";
 
 // All tuning data for multiple HLO modules.
 message TuningData {
@@ -65,7 +65,7 @@ message TileSizeConfig {
 // The HloModuleConfig is used to configure different global decisions that
 // affect the performance of the entire HLO module.
 message HloModuleConfig {
-  optional LayoutConfig layout_config = 1;
+  LayoutConfig layout_config = 1;
 }
 
 message LayoutConfig {

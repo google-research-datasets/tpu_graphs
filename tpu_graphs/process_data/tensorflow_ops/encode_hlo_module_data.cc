@@ -19,21 +19,21 @@ limitations under the License.
 #include <string>
 #include <utility>
 
-#include "third_party/py/tpu_graphs/process_data/xla/hlo_encoder.h"
-#include "third_party/py/tpu_graphs/process_data/xla/hlo_opcode.h"
-#include "third_party/py/tpu_graphs/process_data/xla/tuning_data_iterator.h"
-#include "third_party/py/tpu_graphs/proto/tuning.proto.h"
-#include "third_party/tensorflow/compiler/xla/hlo/ir/hlo_opcode.h"
-#include "third_party/tensorflow/compiler/xla/service/hlo.proto.h"
-#include "third_party/tensorflow/compiler/xla/statusor.h"
-#include "third_party/tensorflow/core/framework/op.h"
-#include "third_party/tensorflow/core/framework/op_kernel.h"
-#include "third_party/tensorflow/core/framework/shape_inference.h"
-#include "third_party/tensorflow/core/framework/tensor.h"
-#include "third_party/tensorflow/core/framework/tensor_types.h"
-#include "third_party/tensorflow/core/framework/types.h"
-#include "third_party/tensorflow/core/lib/core/status.h"
-#include "third_party/tensorflow/core/platform/tstring.h"
+#include "tpu_graphs/process_data/xla/hlo_encoder.h"
+#include "tpu_graphs/process_data/xla/hlo_opcode.h"
+#include "tpu_graphs/process_data/xla/tuning_data_iterator.h"
+#include "tpu_graphs/proto/tuning.pb.h"
+#include "tensorflow/compiler/xla/hlo/ir/hlo_opcode.h"
+#include "tensorflow/compiler/xla/service/hlo.pb.h"
+#include "tensorflow/compiler/xla/statusor.h"
+#include "tensorflow/core/framework/op.h"
+#include "tensorflow/core/framework/op_kernel.h"
+#include "tensorflow/core/framework/shape_inference.h"
+#include "tensorflow/core/framework/tensor.h"
+#include "tensorflow/core/framework/tensor_types.h"
+#include "tensorflow/core/framework/types.h"
+#include "tensorflow/core/lib/core/status.h"
+#include "tensorflow/core/platform/tstring.h"
 
 namespace xla {
 namespace ml_cost_model {
