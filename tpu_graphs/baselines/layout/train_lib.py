@@ -156,41 +156,13 @@ def train(args: train_args.TrainArgs):
       best_params = {v.ref: v + 0 for v in model.trainable_variables}
       logging.info(' * [@%i] Validation (NEW BEST): %s', i, str(val_opa))
       # Write model and train metrics (in `run_info`).
-      # save_model(model, run_info, out_dir, args)
+      save_model(model, run_info, out_dir, args)
     elif args.early_stop > 0 and i - best_val_at_epoch >= args.early_stop:
       logging.info('[@%i] Best accuracy was attained at epoch %i. Stopping.',
                    i, best_val_at_epoch)
       break
 
-  ##################
-  directory_path = '/root/data/tpugraphs/cache/'
-
-  # Check if the directory exists
-  if not os.path.exists(directory_path):
-      print(f"The directory '{directory_path}' does not exist.")
-      sys.exit(1)
-
-  # Create a directory object
-  directory_object = os.scandir(directory_path)
-
-  # Get the memory size of the directory object
-  memory_size_bytes = sys.getsizeof(directory_object)
-  memory_size_kb = memory_size_bytes / 1024
-  memory_size_mb = memory_size_kb / 1024
-
-  print(f"Memory size of directory object: {memory_size_bytes} bytes")
-  print(f"Memory size of directory object: {memory_size_kb:.2f} KB")
-  print(f"Memory size of directory object: {memory_size_mb:.2f} MB")
-
-
-  directory_path = '/root/data/tpugraphs/cache/'
-
-  # Check if the directory exists
-  if os.path.exists(directory_path) and os.path.isdir(directory_path):
-      os.rmdir(directory_path)
-      print(f"Directory '{directory_path}' removed successfully.")
-  else:
-      print(f"Directory '{directory_path}' does not exist or is not a directory.")
+  ########################################
   del train_ds,valid_ds
   ########################################
   # Restore best parameters.
