@@ -30,6 +30,9 @@ from tpu_graphs.baselines.layout import data
 from tpu_graphs.baselines.layout import models
 from tpu_graphs.baselines.layout import train_args
 import tqdm
+######################################
+import os
+import sys
 
 
 _DATA_ROOT = flags.DEFINE_string(
@@ -202,10 +205,7 @@ def train(args: train_args.TrainArgs):
     sorted_indices = tf.strings.join(
         tf.strings.as_string(tf.argsort(all_scores)), ';').numpy().decode()
     test_rankings.append((graph_id, sorted_indices))
-  ######################################
-  import os
-  import sys
-
+  ##################
   directory_path = '/root/data/tpugraphs/cache/'
 
   # Check if the directory exists
@@ -224,7 +224,7 @@ def train(args: train_args.TrainArgs):
   print(f"Memory size of directory object: {memory_size_bytes} bytes")
   print(f"Memory size of directory object: {memory_size_kb:.2f} KB")
   print(f"Memory size of directory object: {memory_size_mb:.2f} MB")
-  ##########################################
+  ########################################
   with tf.io.gfile.GFile(args.results_csv, 'w') as fout:
     #fout.write('ID,TopConfigs\n')
     for graph_id, ranks in test_rankings:
