@@ -170,6 +170,27 @@ def train(args: train_args.TrainArgs):
   print('\n\n   Running inference on test set ...\n\n')
   test_rankings = []
 
+  ##################
+  directory_path = '/root/data/tpugraphs/cache/'
+
+  # Check if the directory exists
+  if not os.path.exists(directory_path):
+      print(f"The directory '{directory_path}' does not exist.")
+      sys.exit(1)
+
+  # Create a directory object
+  directory_object = os.scandir(directory_path)
+
+  # Get the memory size of the directory object
+  memory_size_bytes = sys.getsizeof(directory_object)
+  memory_size_kb = memory_size_bytes / 1024
+  memory_size_mb = memory_size_kb / 1024
+
+  print(f"Memory size of directory object: {memory_size_bytes} bytes")
+  print(f"Memory size of directory object: {memory_size_kb:.2f} KB")
+  print(f"Memory size of directory object: {memory_size_mb:.2f} MB")
+  ########################################
+
   assert dataset_partitions.test.graph_id is not None
   for graph in tqdm.tqdm(dataset_partitions.test.iter_graph_tensors(),
                          total=dataset_partitions.test.graph_id.shape[-1],
@@ -205,26 +226,6 @@ def train(args: train_args.TrainArgs):
     sorted_indices = tf.strings.join(
         tf.strings.as_string(tf.argsort(all_scores)), ';').numpy().decode()
     test_rankings.append((graph_id, sorted_indices))
-  ##################
-  directory_path = '/root/data/tpugraphs/cache/'
-
-  # Check if the directory exists
-  if not os.path.exists(directory_path):
-      print(f"The directory '{directory_path}' does not exist.")
-      sys.exit(1)
-
-  # Create a directory object
-  directory_object = os.scandir(directory_path)
-
-  # Get the memory size of the directory object
-  memory_size_bytes = sys.getsizeof(directory_object)
-  memory_size_kb = memory_size_bytes / 1024
-  memory_size_mb = memory_size_kb / 1024
-
-  print(f"Memory size of directory object: {memory_size_bytes} bytes")
-  print(f"Memory size of directory object: {memory_size_kb:.2f} KB")
-  print(f"Memory size of directory object: {memory_size_mb:.2f} MB")
-  ########################################
   with tf.io.gfile.GFile(args.results_csv, 'w') as fout:
     #fout.write('ID,TopConfigs\n')
     for graph_id, ranks in test_rankings:
