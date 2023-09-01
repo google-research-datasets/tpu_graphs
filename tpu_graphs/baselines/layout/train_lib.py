@@ -30,9 +30,6 @@ from tpu_graphs.baselines.layout import data
 from tpu_graphs.baselines.layout import models
 from tpu_graphs.baselines.layout import train_args
 import tqdm
-######################################
-import os
-import sys
 
 
 _DATA_ROOT = flags.DEFINE_string(
@@ -161,10 +158,6 @@ def train(args: train_args.TrainArgs):
       logging.info('[@%i] Best accuracy was attained at epoch %i. Stopping.',
                    i, best_val_at_epoch)
       break
-
-  ########################################
-  del train_ds,valid_ds
-  ########################################
   # Restore best parameters.
   assert best_params is not None
   for v in model.trainable_variables:
