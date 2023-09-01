@@ -31,9 +31,6 @@ from tpu_graphs.baselines.layout import models
 from tpu_graphs.baselines.layout import train_args
 import tqdm
 
-##################################
-import IPython
-
 
 _DATA_ROOT = flags.DEFINE_string(
     'data_root', '/kaggle/input/predict-ai-model-runtime/npz_all/npz/layout',
@@ -129,9 +126,6 @@ def train(args: train_args.TrainArgs):
       .map(tfgnn.GraphTensor.merge_batch_to_components)
       .map(_graph_and_label))
 
-  #############################################
-  print("###############",1)
-  IPython.embed()
 
   best_params = None
   best_val_opa = -1
@@ -208,7 +202,29 @@ def train(args: train_args.TrainArgs):
     sorted_indices = tf.strings.join(
         tf.strings.as_string(tf.argsort(all_scores)), ';').numpy().decode()
     test_rankings.append((graph_id, sorted_indices))
+  ######################################
+  import os
+  import sys
 
+  directory_path = '/root/data/tpugraphs/cache/'
+
+  # Check if the directory exists
+  if not os.path.exists(directory_path):
+      print(f"The directory '{directory_path}' does not exist.")
+      sys.exit(1)
+
+  # Create a directory object
+  directory_object = os.scandir(directory_path)
+
+  # Get the memory size of the directory object
+  memory_size_bytes = sys.getsizeof(directory_object)
+  memory_size_kb = memory_size_bytes / 1024
+  memory_size_mb = memory_size_kb / 1024
+
+  print(f"Memory size of directory object: {memory_size_bytes} bytes")
+  print(f"Memory size of directory object: {memory_size_kb:.2f} KB")
+  print(f"Memory size of directory object: {memory_size_mb:.2f} MB")
+  ##########################################
   with tf.io.gfile.GFile(args.results_csv, 'w') as fout:
     #fout.write('ID,TopConfigs\n')
     for graph_id, ranks in test_rankings:
