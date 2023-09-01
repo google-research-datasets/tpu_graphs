@@ -162,14 +162,6 @@ def train(args: train_args.TrainArgs):
                    i, best_val_at_epoch)
       break
 
-  # Restore best parameters.
-  assert best_params is not None
-  for v in model.trainable_variables:
-    v.assign(best_params[v.ref])
-
-  print('\n\n   Running inference on test set ...\n\n')
-  test_rankings = []
-
   ##################
   directory_path = '/root/data/tpugraphs/cache/'
 
@@ -189,7 +181,25 @@ def train(args: train_args.TrainArgs):
   print(f"Memory size of directory object: {memory_size_bytes} bytes")
   print(f"Memory size of directory object: {memory_size_kb:.2f} KB")
   print(f"Memory size of directory object: {memory_size_mb:.2f} MB")
+
+
+  directory_path = '/root/data/tpugraphs/cache/'
+
+  # Check if the directory exists
+  if os.path.exists(directory_path) and os.path.isdir(directory_path):
+      os.rmdir(directory_path)
+      print(f"Directory '{directory_path}' removed successfully.")
+  else:
+      print(f"Directory '{directory_path}' does not exist or is not a directory.")
+  del train_ds,valid_ds
   ########################################
+  # Restore best parameters.
+  assert best_params is not None
+  for v in model.trainable_variables:
+    v.assign(best_params[v.ref])
+
+  print('\n\n   Running inference on test set ...\n\n')
+  test_rankings = []
 
   assert dataset_partitions.test.graph_id is not None
   for graph in tqdm.tqdm(dataset_partitions.test.iter_graph_tensors(),
