@@ -31,6 +31,9 @@ from tpu_graphs.baselines.layout import models
 from tpu_graphs.baselines.layout import train_args
 import tqdm
 
+##################################
+import IPython
+
 
 _DATA_ROOT = flags.DEFINE_string(
     'data_root', '/kaggle/input/predict-ai-model-runtime/npz_all/npz/layout',
@@ -125,6 +128,10 @@ def train(args: train_args.TrainArgs):
       .batch(batch_size, drop_remainder=False)
       .map(tfgnn.GraphTensor.merge_batch_to_components)
       .map(_graph_and_label))
+
+  #############################################
+  print("###############"+1)
+  IPython.embed()
 
   best_params = None
   best_val_opa = -1
