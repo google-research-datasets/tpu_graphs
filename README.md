@@ -523,3 +523,54 @@ The following describe each element at a particular index in the per-node layout
 ```
 
 If a tensor has N dimensions, feature values of _i are set to -1 if i >= N (-1 padding). A layout determines the order of minor-to-major tensor dimensions. For example, the layout of {1, 0, 2, -1, -1, -1} of a 3D tensor indicates that dimension 1 is the most minor (elements of the most minor dimension are consecutive in the physical space) and dimension 2 is the most major.
+
+
+## Graph Feature Extraction
+
+This section explains how to customize the node feature extraction.
+The raw graph data is saved in protobuf format, defined as `ModuleTuningData` in
+`tpu_graphs/proto/tuning.proto`.
+`FeaturizeHloInstruction` in `tpu_graphs/process_data/xla/featurizers.h`
+contains the main logic to extract node features from a raw graph.
+To customize node feature extraction, you can modify `tpu_graphs/process_data/xla/featurizers.h`
+and the corresponding size of the node feature vector defined in
+`tpu_graphs/process_data/xla/hlo_opcode.h`.
+
+Then, build the following C++ file to create Python module for extracting graph features:
+```
+sudo apt install bazel-5.4.1
+bazel-5.4.1 build -c opt tpu_graphs/process_data/xla/graph_features.so --experimental_repo_remote_exec
+cp bazel-bin/tpu_graphs/process_data/xla/graph_features.so .
+```
+
+The function can be used in Python as follows:
+```python
+import graph_features
+node_opcode, node_feat, edge_index, node_config_ids, node_splits = graph_features.extract_graph_features("<path_to_raw_protobuf_data>.pb")
+```
+
+The directory structure and filenames of .pb files match those of .npz files.
+In particular, the original graph in `npz/.../xxx.npz` can be found in `pb/.../xxx.pb`.
+Therefore, you can use graph features produced by this function instead of
+(node_opcode, node_feat, edge_index, node_config_ids, node_splits) attributes
+from the .npz file.
+
+### Testing in C++
+
+To test that your code is working properly within C++, you can run:
+```
+bazel-5.4.1 build -c opt tpu_graphs/process_data/xla/data_main --experimental_repo_remote_exec --sandbox_debug --verbose_failures
+./bazel-bin/tpu_graphs/process_data/xla/data_main <path_to_raw_protobuf_data>.pb
+```
+
+### Troubleshooting
+
+If you get `libstdc++.so.6: version GLIBCXX_3.4.30 not found ` during
+`import graph_features`, you can follow these steps.
+First, check if you have `/usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.30`.
+If not, install it. Then, fix your conda environment to use that version.
+```
+cp /usr/lib/i386-linux-gnu/libstdc++.so.6.0.30 /usr/local/google/home/{user}/miniconda3/envs/tpugraphs/lib/
+rm /usr/local/google/home/{user}/miniconda3/envs/tpugraphs/lib/libstdc++.so.6
+sudo ln -sf /usr/local/google/home/mangpo/miniconda3/envs/tpugraphs/lib/libstdc++.so.6.0.30 /usr/local/google/home/mangpo/miniconda3/envs/tpugraphs/lib/libstdc++.so.6
+```

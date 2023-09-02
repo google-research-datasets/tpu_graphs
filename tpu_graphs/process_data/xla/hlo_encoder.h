@@ -381,7 +381,6 @@ class SparseHloEncoder : public HloEncoder {
   tf::StatusOr<int> CreateOutputBuilders(const HloModuleStat& stat,
                                          tf::OpKernelContext* context);
 
- private:
   struct Outputs {
     tf::Tensor* opcodes_values;
     tf::Tensor* opcodes_splits;

@@ -1,3 +1,5 @@
+load("@pybind11_bazel//:build_defs.bzl", "pybind_extension")
+
 package(
     default_visibility = ["//visibility:public"],
 )
@@ -73,5 +75,16 @@ cc_binary(
         "@org_tensorflow//tensorflow/core:framework",
         "@org_tensorflow//tensorflow/core:framework_lite",
         "@org_tensorflow//tensorflow/core:protos_all_cc",
+    ],
+)
+
+pybind_extension(
+    name = "graph_features",
+    srcs = ["graph_features.cc"],
+    deps = [
+        ":hlo_encoder",
+        "//tpu_graphs/proto:tuning_cc_proto",
+        "@org_tensorflow//tensorflow/core:framework",
+        "@org_tensorflow//tensorflow/core:lib",
     ],
 )

@@ -1,6 +1,7 @@
 #include <cstdint>
 #include <iostream>
 #include <memory>
+#include <string>
 #include <vector>
 
 #include "tpu_graphs/process_data/xla/featurizers.h"
@@ -46,9 +47,8 @@ void TestDenseNeighborIndicesBuilderOnOneGraphOneNode() {
   CHECK_EQ(neighbor_masks.matrix<float>()(0, 0), 0);
 }
 
-void TestModuleTuningDataNoFilter() {
+void TestModuleTuningDataNoFilter(const std::string& source_path) {
   std::cout << "TestModuleTuningDataNoFilter\n";
-  const std::string source_path = "/tmp/module_tuning_data_layout.pb";
   tpu_graphs::ModuleTuningData proto_data;
   CHECK(tf::ReadBinaryProto(tf::Env::Default(), source_path, &proto_data).ok());
 
@@ -65,6 +65,6 @@ void TestModuleTuningDataNoFilter() {
 int main(int argc, char* argv[]) {
   xla::ml_lib::TestFeaturizeTileSizeConfig();
   xla::ml_lib::TestDenseNeighborIndicesBuilderOnOneGraphOneNode();
-  xla::ml_lib::TestModuleTuningDataNoFilter();
+  xla::ml_lib::TestModuleTuningDataNoFilter(argv[1]);
   return 0;
 }
