@@ -160,6 +160,7 @@ def train(args: train_args.TrainArgs):
   #     break
 
   # Restore best parameters.
+
   assert best_params is not None
   for v in model.trainable_variables:
     v.assign(best_params[v.ref])
