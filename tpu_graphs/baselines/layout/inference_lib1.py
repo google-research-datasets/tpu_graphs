@@ -111,13 +111,13 @@ def train(args: train_args.TrainArgs):
 
   model = models.ResModel(num_configs, dataset_partitions.num_ops)
 
-  loss = tfr.keras.losses.ListMLELoss()  # (temperature=10)
-  opt = tf.keras.optimizers.Adam(
-      learning_rate=args.learning_rate, clipnorm=args.clip_norm)
+  # loss = tfr.keras.losses.ListMLELoss()  # (temperature=10)
+  # opt = tf.keras.optimizers.Adam(
+  #     learning_rate=args.learning_rate, clipnorm=args.clip_norm)
 
-  model.compile(loss=loss, optimizer=opt, metrics=[
-      tfr.keras.metrics.OPAMetric(name='opa_metric'),
-  ])
+  # model.compile(loss=loss, optimizer=opt, metrics=[
+  #     tfr.keras.metrics.OPAMetric(name='opa_metric'),
+  # ])
 
   # valid_ds = (
   #     dataset_partitions.validation.get_graph_tensors_dataset(
@@ -161,7 +161,7 @@ def train(args: train_args.TrainArgs):
 
   # Restore best parameters.
 
-  model.load_weights("/kaggle/input/google-fast-or-slow-2/out/tpugraphs_layout/model_8d24ecb91a98671e63ad00108f138b66/saved_model.pb")
+  model.load_weights("/kaggle/input/google-fast-or-slow-2/out/tpugraphs_layout/model_8d24ecb91a98671e63ad00108f138b66/saved_model")
 
   #assert best_params is not None
   for v in model.trainable_variables:
