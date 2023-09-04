@@ -130,34 +130,34 @@ def train(args: train_args.TrainArgs):
   best_params = None
   best_val_opa = -1
   best_val_at_epoch = -1
-  train_curve = run_info['train_curve']  # For short.
-  for i in range(args.epochs):
-    old_alsologtostderr = flags.FLAGS.alsologtostderr
-    flags.FLAGS.alsologtostderr = True
-    history = model.fit(
-        train_ds, epochs=1, verbose=1, validation_data=valid_ds,
-        validation_freq=1)
-    if _PDB.value == i:
-      pdb.set_trace()  # pylint: disable=forgotten-debug-statement
+  # train_curve = run_info['train_curve']  # For short.
+  # for i in range(args.epochs):
+  #   old_alsologtostderr = flags.FLAGS.alsologtostderr
+  #   flags.FLAGS.alsologtostderr = True
+  #   history = model.fit(
+  #       train_ds, epochs=1, verbose=1, validation_data=valid_ds,
+  #       validation_freq=1)
+  #   if _PDB.value == i:
+  #     pdb.set_trace()  # pylint: disable=forgotten-debug-statement
 
-    flags.FLAGS.alsologtostderr = old_alsologtostderr
-    train_curve['epoch'].append(i)
-    train_curve['train_loss'].append(history.history['loss'][-1])
-    train_curve['train_opa'].append(history.history['opa_metric'][-1])
-    train_curve['val_loss'].append(history.history['val_loss'][-1])
-    train_curve['val_opa'].append(history.history['val_opa_metric'][-1])
-    val_opa = history.history['val_opa_metric'][-1]
-    if val_opa > best_val_opa:
-      best_val_opa = val_opa
-      best_val_at_epoch = i
-      best_params = {v.ref: v + 0 for v in model.trainable_variables}
-      logging.info(' * [@%i] Validation (NEW BEST): %s', i, str(val_opa))
-      # Write model and train metrics (in `run_info`).
-      save_model(model, run_info, out_dir, args)
-    elif args.early_stop > 0 and i - best_val_at_epoch >= args.early_stop:
-      logging.info('[@%i] Best accuracy was attained at epoch %i. Stopping.',
-                   i, best_val_at_epoch)
-      break
+  #   flags.FLAGS.alsologtostderr = old_alsologtostderr
+  #   train_curve['epoch'].append(i)
+  #   train_curve['train_loss'].append(history.history['loss'][-1])
+  #   train_curve['train_opa'].append(history.history['opa_metric'][-1])
+  #   train_curve['val_loss'].append(history.history['val_loss'][-1])
+  #   train_curve['val_opa'].append(history.history['val_opa_metric'][-1])
+  #   val_opa = history.history['val_opa_metric'][-1]
+  #   if val_opa > best_val_opa:
+  #     best_val_opa = val_opa
+  #     best_val_at_epoch = i
+  #     best_params = {v.ref: v + 0 for v in model.trainable_variables}
+  #     logging.info(' * [@%i] Validation (NEW BEST): %s', i, str(val_opa))
+  #     # Write model and train metrics (in `run_info`).
+  #     save_model(model, run_info, out_dir, args)
+  #   elif args.early_stop > 0 and i - best_val_at_epoch >= args.early_stop:
+  #     logging.info('[@%i] Best accuracy was attained at epoch %i. Stopping.',
+  #                  i, best_val_at_epoch)
+  #     break
 
   # Restore best parameters.
   assert best_params is not None
