@@ -161,7 +161,7 @@ def train(args: train_args.TrainArgs):
 
   # Restore best parameters.
 
-  model.load_weights("/kaggle/input/google-fast-or-slow-2/out/tpugraphs_layout/model_8d24ecb91a98671e63ad00108f138b66/saved_model")
+  model.load_weights("/kaggle/input/google-fast-or-slow-2/out/tpugraphs_layout/model_8d24ecb91a98671e63ad00108f138b66")
 
   #assert best_params is not None
   for v in model.trainable_variables:
