@@ -74,7 +74,7 @@ def save_model(
   logging.info('wrote %s', out_model_file)
 
 
-_INFERENCE_CONFIGS_BATCH_SIZE = 500  # For producing inference csv, post-train.
+_INFERENCE_CONFIGS_BATCH_SIZE = 100  # For producing inference csv, post-train.
 
 
 def train(args: train_args.TrainArgs):
@@ -163,7 +163,9 @@ def train(args: train_args.TrainArgs):
   assert best_params is not None
   for v in model.trainable_variables:
     v.assign(best_params[v.ref])
-
+  ##########################################
+  del train_ds,valid_ds
+  ##########################################
   print('\n\n   Running inference on test set ...\n\n')
   test_rankings = []
 
