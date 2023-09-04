@@ -47,7 +47,7 @@ from tpu_graphs.baselines.layout import inference_lib1
 
 
 def main(unused_argv: Sequence[str]) -> None:
-  train_lib1.train(train_args.get_args())
+  inference_lib1.train(train_args.get_args())
 
 
 if __name__ == '__main__':
