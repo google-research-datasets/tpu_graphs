@@ -37,7 +37,7 @@ _DATA_ROOT = flags.DEFINE_string(
     'Root directory containing dataset. It must contain subdirectories '
     '{train, test, valid}, each having many .npz files')
 _CACHE_DIR = flags.DEFINE_string(
-    'cache_dir', '~/data/tpugraphs/cache/layout',
+    'cache_dir', '/kaggle/working/data/tpugraphs/cache/layout',
     'If given, dataset tensors will be cached here for faster loading. Files '
     'with name "<hash>.npz" will be written, where <hash> is a hash of the '
     'filepattern of training data, i.e., it depends on the collection e.g., '
