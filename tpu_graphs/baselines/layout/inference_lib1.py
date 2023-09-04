@@ -101,13 +101,13 @@ def train(args: train_args.TrainArgs):
       cache_dir=os.path.expanduser(_CACHE_DIR.value))
   batch_size = args.batch_size
 
-  train_ds = (
-      dataset_partitions.train.get_graph_tensors_dataset(
-          num_configs, max_nodes=args.keep_nodes)
-      .shuffle(100, reshuffle_each_iteration=True)
-      .batch(batch_size, drop_remainder=False)
-      .map(tfgnn.GraphTensor.merge_batch_to_components)
-      .map(_graph_and_label))
+  # train_ds = (
+  #     dataset_partitions.train.get_graph_tensors_dataset(
+  #         num_configs, max_nodes=args.keep_nodes)
+  #     .shuffle(100, reshuffle_each_iteration=True)
+  #     .batch(batch_size, drop_remainder=False)
+  #     .map(tfgnn.GraphTensor.merge_batch_to_components)
+  #     .map(_graph_and_label))
 
   model = models.ResModel(num_configs, dataset_partitions.num_ops)
 
@@ -119,12 +119,12 @@ def train(args: train_args.TrainArgs):
       tfr.keras.metrics.OPAMetric(name='opa_metric'),
   ])
 
-  valid_ds = (
-      dataset_partitions.validation.get_graph_tensors_dataset(
-          num_configs)
-      .batch(batch_size, drop_remainder=False)
-      .map(tfgnn.GraphTensor.merge_batch_to_components)
-      .map(_graph_and_label))
+  # valid_ds = (
+  #     dataset_partitions.validation.get_graph_tensors_dataset(
+  #         num_configs)
+  #     .batch(batch_size, drop_remainder=False)
+  #     .map(tfgnn.GraphTensor.merge_batch_to_components)
+  #     .map(_graph_and_label))
 
 
   best_params = None
@@ -161,7 +161,9 @@ def train(args: train_args.TrainArgs):
 
   # Restore best parameters.
 
-  assert best_params is not None
+  model.load_weights("/kaggle/input/google-fast-or-slow-2/out/tpugraphs_layout/model_8d24ecb91a98671e63ad00108f138b66/saved_model.pb")
+
+  #assert best_params is not None
   for v in model.trainable_variables:
     v.assign(best_params[v.ref])
 
