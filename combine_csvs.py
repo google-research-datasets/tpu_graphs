@@ -26,43 +26,46 @@ import sys
 from absl import app
 from absl import flags
 
-csv.field_size_limit(sys.maxsize)
 
+
+
+
+csv.field_size_limit(sys.maxsize)
 _OUTPUT_CSV = flags.DEFINE_string(
-    'output', '~/out/tpugraphs_submission.csv', 'Path to output CSV')
+    'output', '/kaggle/working/out/tpugraphs_submission.csv', 'Path to output CSV')
 _TILE_CSV = flags.DEFINE_string(
     'tile', '', 'Path to csv containing top indices for the tile collection. '
     'This can be generated using binary "baselines/tiles/tiles_train.py". If '
     'not given, it defaults to the largest timestamp matching '
-    '~/out/tpugraphs_tiles/results_*.csv')
+    '/kaggle/input/google-fast-or-slow-1/out/tpugraphs_tiles/results_*.csv')
 _LAYOUT_NLP_RANDOM_CSV = flags.DEFINE_string(
     'layout_nlp_random', '',
     'Path to csv containing ranked indices for the collection '
     'layout:nlp:random. This can be generated using binary '
     '"baselines/layout/layout_train.py --source nlp --search random". If not '
     'given, it defaults to the largest timestamp matching '
-    '~/out/tpugraphs_layout/results_*_nlp_random.csv')
+    '/kaggle/input/google-fast-or-slow-4/out/tpugraphs_layout/results_*_nlp_random.csv')
 _LAYOUT_NLP_DEFAULT_CSV = flags.DEFINE_string(
     'layout_nlp_default', '',
     'Path to csv containing ranked indices for the collection '
     'layout:nlp:default. This can be generated using binary '
     '"baselines/layout/layout_train.py --source nlp --search default". If not '
     'given, it defaults to the largest timestamp matching '
-    '~/out/tpugraphs_layout/results_*_nlp_default.csv')
+    '/kaggle/input/google-fast-or-slow-5/out/tpugraphs_layout/results_*_nlp_default.csv')
 _LAYOUT_XLA_RANDOM_CSV = flags.DEFINE_string(
     'layout_xla_random', '',
     'Path to csv containing ranked indices for the collection '
     'layout:xla:random. This can be generated using binary '
     '"baselines/layout/layout_train.py --source xla --search random". If not '
     'given, it defaults to the largest timestamp matching '
-    '~/out/tpugraphs_layout/results_*_xla_random.csv')
+    '/kaggle/input/google-fast-or-slow-2/out/tpugraphs_layout/results_*_xla_random.csv')
 _LAYOUT_XLA_DEFAULT_CSV = flags.DEFINE_string(
     'layout_xla_default', '',
     'Path to csv containing ranked indices for the collection '
     'layout:xla:default. This can be generated using binary '
     '"baselines/layout/layout_train.py --source xla --search default". If not '
     'given, it defaults to the largest timestamp matching '
-    '~/out/tpugraphs_layout/results_*_xla_default.csv')
+    '/kaggle/input/google-fast-or-slow-3/out/tpugraphs_layout/results_*_xla_default.csv')
 
 _DEFAULT_INPUTS = [
     (_TILE_CSV, '~/out/tpugraphs_tiles/results_*.csv'),
