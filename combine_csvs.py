@@ -110,6 +110,8 @@ def main(argv: Sequence[str]) -> None:
     for filepath in csv_filepaths:
       for record in csv.DictReader(open(filepath)):
         print(record["ID"])
+        if "ID" not in record:
+          break
         if record['ID'] in output_ids:
           raise ValueError(f'Duplicate record with ID {record["ID"]}')
         output_ids.add(record['ID'])
