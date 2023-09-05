@@ -68,13 +68,15 @@ _LAYOUT_XLA_DEFAULT_CSV = flags.DEFINE_string(
     '/kaggle/input/google-fast-or-slow-3/out/tpugraphs_layout/results_*_xla_default.csv')
 
 _DEFAULT_INPUTS = [
-    (_TILE_CSV, '~/out/tpugraphs_tiles/results_*.csv'),
-    (_LAYOUT_NLP_RANDOM_CSV, '~/out/tpugraphs_layout/results_*_nlp_random.csv'),
+    (_TILE_CSV, '/kaggle/input/google-fast-or-slow-1/out/tpugraphs_tiles/results_*.csv'),
+    (_LAYOUT_NLP_RANDOM_CSV,
+    '/kaggle/input/google-fast-or-slow-4/out/tpugraphs_layout/results_*_nlp_random.csv'),
     (_LAYOUT_NLP_DEFAULT_CSV,
-     '~/out/tpugraphs_layout/results_*_nlp_default.csv'),
-    (_LAYOUT_XLA_RANDOM_CSV, '~/out/tpugraphs_layout/results_*_xla_random.csv'),
+     '/kaggle/input/google-fast-or-slow-5/out/tpugraphs_layout/results_*_nlp_default.csv'),
+    (_LAYOUT_XLA_RANDOM_CSV,
+    '/kaggle/input/google-fast-or-slow-2/out/tpugraphs_layout/results_*_xla_random.csv'),
     (_LAYOUT_XLA_DEFAULT_CSV,
-     '~/out/tpugraphs_layout/results_*_xla_default.csv'),
+     '/kaggle/input/google-fast-or-slow-3/out/tpugraphs_layout/results_*_xla_default.csv'),
 ]
 
 
