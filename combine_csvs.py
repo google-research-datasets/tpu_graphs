@@ -109,6 +109,7 @@ def main(argv: Sequence[str]) -> None:
     f.write('ID,TopConfigs\n')
     for filepath in csv_filepaths:
       for record in csv.DictReader(open(filepath)):
+        print(record,csv.DictReader(open(filepath)))
         if record['ID'] in output_ids:
           raise ValueError(f'Duplicate record with ID {record["ID"]}')
         output_ids.add(record['ID'])
