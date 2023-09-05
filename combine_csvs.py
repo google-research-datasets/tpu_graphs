@@ -108,6 +108,7 @@ def main(argv: Sequence[str]) -> None:
   with open(out_filepath, 'w') as f:
     f.write('ID,TopConfigs\n')
     for filepath in csv_filepaths:
+      print(filepath)
       for record in csv.DictReader(open(filepath)):
 
         if "ID" not in record:
