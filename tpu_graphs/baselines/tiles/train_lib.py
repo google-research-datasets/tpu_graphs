@@ -136,6 +136,9 @@ def train(args: train_args.TrainArgs):
   for i in range(args.epochs):
     old_alsologtostderr = flags.FLAGS.alsologtostderr
     flags.FLAGS.alsologtostderr = True
+    ###############################################
+    print(train_ds)
+    return
     history = model.fit(
         train_ds, epochs=1, verbose=1, validation_data=valid_ds)
     flags.FLAGS.alsologtostderr = old_alsologtostderr
