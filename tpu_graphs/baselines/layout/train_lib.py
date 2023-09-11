@@ -74,7 +74,7 @@ def save_model(
   logging.info('wrote %s', out_model_file)
 
 
-_INFERENCE_CONFIGS_BATCH_SIZE = 500  # For producing inference csv, post-train.
+_INFERENCE_CONFIGS_BATCH_SIZE = 8  # For producing inference csv, post-train.
 
 
 def train(args: train_args.TrainArgs):

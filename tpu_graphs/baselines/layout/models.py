@@ -29,10 +29,10 @@ class ResModel(tf.keras.Model):
   """GNN with residual connections."""
 
   def __init__(
-      self, num_configs: int, num_ops: int, op_embed_dim: int = 32,
+      self, num_configs: int, num_ops: int, op_embed_dim: int = 8,
       num_gnns: int = 2, mlp_layers: int = 2,
       hidden_activation: str = 'leaky_relu',
-      hidden_dim: int = 32, reduction: str = 'sum'):
+      hidden_dim: int = 8, reduction: str = 'sum'):
     super().__init__()
     self._num_configs = num_configs
     self._num_ops = num_ops
