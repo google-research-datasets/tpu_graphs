@@ -74,7 +74,7 @@ def save_model(
   logging.info('wrote %s', out_model_file)
 
 
-_INFERENCE_CONFIGS_BATCH_SIZE = 8  # For producing inference csv, post-train.
+_INFERENCE_CONFIGS_BATCH_SIZE = 256  # ~60G For producing inference csv, post-train.
 
 
 def train(args: train_args.TrainArgs):
@@ -207,4 +207,3 @@ def train(args: train_args.TrainArgs):
     for graph_id, ranks in test_rankings:
       fout.write(f'layout:{args.source}:{args.search}:{graph_id},{ranks}\n')
   print('\n\n   ***  Wrote', args.results_csv, '\n\n')
-
