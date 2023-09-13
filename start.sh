@@ -6,7 +6,7 @@
 # python layout_train.py --epochs 1 --toy_data=True
 
 # On xla:random
-python layout_train.py --source xla --search random --epochs 1 --max_configs 2000  --configs 2 --keep_nodes -1
+python layout_train.py --source xla --search random --epochs 10 --max_configs 2000  --configs 2 --keep_nodes -1
 
 # On xla:default
 python layout_train.py --source xla --search default --epochs 10 --max_configs 2000  --configs 2 --keep_nodes -1
@@ -23,4 +23,4 @@ python tiles_train.py --model=EarlyJoinSAGE --epochs 20
 python combine_csvs.py
 
 MSG="init_version"
-kaggle competitions submit predict-ai-model-runtime -f /root/out/tpugraphs_submission.csv -m ${MSG}
+kaggle competitions submit predict-ai-model-runtime -f /root/out/tpugraphs_submission.csv -m "${MSG}"
