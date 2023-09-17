@@ -95,7 +95,26 @@ def train(args: train_args.TrainArgs):
   data_root_dir = os.path.join(
       os.path.expanduser(_DATA_ROOT.value), args.source, args.search)
   num_configs = args.configs
-  dataset_partitions = data.get_npz_dataset(
+
+  cache_dir = os.path.expanduser(_CACHE_DIR.value)
+  cached_flag = os.path.join(cache_dir, '_SUCCESS')
+
+  if os.path.exists(cached_flag):
+    print(f'{cached_flag} exists, load from cache')
+    train_iter=,
+    validation_iter=,
+    test=
+  else:
+    data.save_npz_split_by_graph(data_root_dir,
+                                 normalizer_path=args.normalizer_path,
+                                 min_train_configs=num_configs,
+                                 max_train_configs=args.max_configs,
+                                 cache_dir=os.path.expanduser(_CACHE_DIR.value))
+    _s = open(cached_flag, 'w')
+    _s.close()
+
+
+  dataset_partitions = data.get_npz_by_parts(
       data_root_dir, min_train_configs=num_configs,
       max_train_configs=args.max_configs,
       cache_dir=os.path.expanduser(_CACHE_DIR.value))

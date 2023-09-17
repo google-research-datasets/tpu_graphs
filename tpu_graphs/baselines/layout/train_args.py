@@ -66,6 +66,8 @@ _SOURCE = flags.DEFINE_string(
     'source', 'xla', 'The graphs collection. You may use "xla" or "nlp".')
 _SEARCH = flags.DEFINE_string(
     'search', 'random', 'The optimization search space. "random" or "default".')
+_NORMALIZER_PATH = flags.DEFINE_string(
+    '~/out/layout_normalizers', '', 'Path to save normalizers of training dataset')
 
 
 class TrainArgs(NamedTuple):
@@ -93,6 +95,8 @@ class TrainArgs(NamedTuple):
 
   # To run multiple experiments.
   run_id: str
+
+  normalizer_path: str
 
   def compute_hash(self) -> str:
     """Returns psuedo-random string that uniquely identifies flag arguments."""
@@ -128,4 +132,5 @@ def get_args() -> TrainArgs:
       learning_rate=_LEARNING_RATE.value, clip_norm=_CLIP_NORM.value,
       configs=_NUM_CONFIGS.value, max_configs=_MAX_CONFIGS.value,
       out_dir=_OUTPUT_DIR.value, validate_batches=_VALIDATE_BATCHES.value,
-      results_csv=_get_results_csv_or_default(), run_id=_RUN_ID.value)
+      results_csv=_get_results_csv_or_default(), run_id=_RUN_ID.value,
+      normalizer_path=_NORMALIZER_PATH)

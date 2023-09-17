@@ -378,6 +378,66 @@ class NpzDatasetPartition:
     self._num_node_splits.append(npz_data['node_splits'].shape[0])
     self._num_edges.append(num_edges)
     self._num_configs.append(num_configs)
+    print(f"[dataset info] graph id: {graph_id}, "
+        + f"num_nodes: {num_nodes}"
+        + f"num_config_nodes: {num_config_nodes}"
+        + f"num_node_splits: {npz_data['node_splits'].shape[0]}"
+        + f"num_edges: {num_edges}"
+        + f"num_configs: {num_configs}")
+
+
+  def add_npz_file_by_configs(
+      self, graph_id: str, npz_file: np.lib.npyio.NpzFile,
+      config_size: int = 2000, min_configs: int = 2):
+    npz_data = dict(npz_file.items())
+    num_configs = npz_data['node_config_feat'].shape[0]
+    num_config_nodes = npz_data['node_config_feat'].shape[1]
+    assert npz_data['node_config_feat'].shape[2] == 18
+    npz_data['node_splits'] = npz_data['node_splits'].reshape([-1])
+    npz_data['argsort_config_runtime'] = np.argsort(npz_data['config_runtime'])
+    n_runtimes = len(npz_data['config_runtime'])
+    if num_configs < min_configs:
+      print('skipping graph with only %i configurations' % num_configs)
+      return
+    reading_config = 0
+    while reading_config < n_runtimes:
+      st = reading_config
+      ed = min(n_runtimes, reading_config + config_size)
+      num_configs = ed - st + 1
+      self._data_dict['node_config_feat'].append(npz_data['node_config_feat'][st:ed].reshape(
+          (num_configs * num_config_nodes, -1)))
+      self._data_dict['config_runtime'].append(npz_data['config_runtime'][st:ed])
+      self._data_dict['argsort_config_runtime'].append(npz_data['argsort_config_runtime'][st:ed])
+      self._data_dict['graph_id'].append(np.array(graph_id))
+      num_nodes = npz_data['node_feat'].shape[0]
+      num_edges = npz_data['edge_index'].shape[0]
+      assert num_config_nodes == npz_data['node_config_ids'].shape[0]
+      assert num_nodes == npz_data['node_opcode'].shape[0]
+      assert num_configs == npz_data['config_runtime'].shape[0]
+      self._num_nodes.append(num_nodes)
+      self._num_config_nodes.append(num_config_nodes)
+      self._num_node_splits.append(npz_data['node_splits'].shape[0])
+      self._num_edges.append(num_edges)
+      self._num_configs.append(num_configs)
+      print(f"[dataset info] graph id: {graph_id}, "
+          + f"config index: {st} -> {ed}"
+          + f"num_nodes: {num_nodes}"
+          + f"num_config_nodes: {num_config_nodes}"
+          + f"num_node_splits: {npz_data['node_splits'].shape[0]}"
+          + f"num_edges: {num_edges}"
+          + f"num_configs: {num_configs}")
+      reading_config += config_size
+      yield f"${st}_{ed}"
+      self.clear()
+
+
+  def clear(self):
+    self._data_dict.clear()
+    self._num_edges = [0]
+    self._num_configs = [0]
+    self._num_nodes = [0]
+    self._num_config_nodes = [0]
+    self._num_node_splits = [0]
 
   def finalize(self):
     """Combines the list of dicts to contiguous tensors (by concat or stack).
@@ -554,12 +614,59 @@ def get_npz_split(
       graph_id = os.path.splitext(os.path.basename(filename))[0]
       npz_dataset.add_npz_file(
           graph_id, np_data, min_configs=min_configs, max_configs=max_configs)
+    print(f"np_dataset size: {len(npz_dataset._data_dict)}")
     npz_dataset.finalize()
     if cache_filename:
       npz_dataset.save_to_file(cache_filename)
 
   return npz_dataset
 
+
+def save_npz_split_by_graph(
+  split_path: str, normalizer_path: str,
+  min_configs=2, max_configs=-1,
+  cache_dir=None):
+  """split and save data by (graph id, config)."""
+  glob_pattern = os.path.join(split_path, '*.npz')
+  files = tf.io.gfile.glob(glob_pattern)
+  node_fea_norm = DatasetNormalizer()
+  node_config_fea_norm = DatasetNormalizer()
+  if not files:
+    raise ValueError('No files matched: ' + glob_pattern)
+
+  cache_filename = None
+  if cache_dir:
+    if not tf.io.gfile.exists(cache_dir):
+      tf.io.gfile.makedirs(cache_dir)
+
+  print('getting npz splits by graph...')
+  for filename in tqdm.tqdm(files):
+      np_data = np.load(tf.io.gfile.GFile(filename, 'rb'))
+      graph_id = os.path.splitext(os.path.basename(filename))[0]
+      _graph_npz = NpzDatasetPartition()
+      iter_npz = _graph_npz.add_npz_file_by_configs(
+          graph_id, np_data, config_size = max_configs, min_configs=min_configs)
+      for config_range in iter_npz:
+          print(f"np_dataset size: {len(_graph_npz._data_dict)}")
+          filename_hash = hashlib.md5(
+                f'{split_path}:{min_configs}:{max_configs}:{config_range}'.encode()
+              ).hexdigest()
+          cache_filename = os.path.join(cache_dir, f'{filename_hash}-cache.npz')
+
+          if cache_dir:
+              print(f'dataset cache file {cache_filename} exists exit')
+              continue
+          else:
+              node_fea_norm.update_normalizer(_graph_npz._data_dict['node_config_feat'])
+              node_config_fea_norm.update_normalizer(_graph_npz._data_dict['node_config_feat'])
+              _graph_npz.finalize()
+              if cache_filename:
+                  _graph_npz.save_to_file(cache_filename)
+  print('all cache saving done')
+  print(f'saving normalizer to {normalizer_path}_node_feat.txt')
+  node_fea_norm.save_normalizer("{normalizer_path}_node_feat.txt")
+  print(f'saving normalizer to {normalizer_path}_node_config_feat.txt')
+  node_fea_norm.save_normalizer("{normalizer_path}_node_config_feat.txt")
 
 def get_npz_dataset(
     root_path: str, min_train_configs=-1, max_train_configs=-1,
@@ -590,5 +697,22 @@ def get_npz_dataset(
           min_configs=min_train_configs, max_configs=max_train_configs),
       test=get_npz_split(
           os.path.join(root_path, 'test'), cache_dir=cache_dir))
+  npz_dataset.normalize()
+  return npz_dataset
+
+
+
+def save_npz_by_parts(
+    root_path: str, min_train_configs=-1, max_train_configs=-1,
+    cache_dir: 'None | str' = None) -> NpzDataset:
+  npz_dataset = NpzDataset()
+  train=get_npz_split_by_graph(
+      os.path.join(root_path, 'train'), cache_dir=cache_dir,
+      min_configs=min_train_configs, max_configs=max_train_configs),
+  validation=get_npz_split_by_graph(
+      os.path.join(root_path, 'valid'), cache_dir=cache_dir,
+      min_configs=min_train_configs, max_configs=max_train_configs),
+  test=get_npz_split_by_graph(
+      os.path.join(root_path, 'test'), cache_dir=cache_dir)
   npz_dataset.normalize()
   return npz_dataset
