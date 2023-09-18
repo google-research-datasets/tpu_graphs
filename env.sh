@@ -28,7 +28,7 @@ conda clean --all -y
 
 python3 -c "import tensorflow as tf; print(tf.config.list_physical_devices('GPU'))"
 
-git clone https://github.com/google-research-datasets/tpu_graphs.git
+git clone https://github.com/yyq263/tpu_graphs.git
 
 # download train&valid&test dataset
 cd tpu_graphs
