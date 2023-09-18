@@ -104,10 +104,10 @@ class _NodeConfigFeatEmbedding(tf.keras.Model):
   def call(
           self, graph: tfgnn.GraphTensor,
           training: bool = False) -> tfgnn.GraphTensor:
-    op_features = dict(graph.node_sets['nconfig'].features)
+    op_features = dict(graph.node_sets['config'].features)
     op_features['feats_e'] = self.embedding_layer(
-      tf.cast(graph.node_sets['nconfig']['feats'], tf.int32))
-    return graph.replace_features(node_sets={'nconfig': op_features})
+      tf.cast(graph.node_sets['config']['feats'], tf.int32))
+    return graph.replace_features(node_sets={'config': op_features})
 
 
 class _SAGE(tf.keras.Model, _ConfigFeatureJoiner):
