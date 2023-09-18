@@ -23,20 +23,30 @@ from tpu_graphs.baselines.tiles import models
 
 _OpEmbedding = models._OpEmbedding  # pylint: disable=protected-access
 _mlp = models._mlp  # pylint: disable=protected-access
+_OpNodeFeatEmbedding = models._NodeFeatEmbedding
+_OpNodeConfigFeatEmbedding = models._NodeConfigFeatEmbedding
 
 
 class ResModel(tf.keras.Model):
   """GNN with residual connections."""
 
   def __init__(
-      self, num_configs: int, num_ops: int, op_embed_dim: int = 32,
-      num_gnns: int = 2, mlp_layers: int = 2,
-      hidden_activation: str = 'leaky_relu',
-      hidden_dim: int = 32, reduction: str = 'sum'):
+          self,
+          num_configs: int,
+          num_ops: int = 120,
+          num_node_feat: int = 140,
+          num_config_feat: int = 18,
+          op_embed_dim: int = 32,
+          num_gnns: int = 2, mlp_layers: int = 2,
+          hidden_activation: str = 'leaky_relu',
+          hidden_dim: int = 32,
+          reduction: str = 'sum'):
     super().__init__()
     self._num_configs = num_configs
     self._num_ops = num_ops
     self._op_embedding = _OpEmbedding(num_ops, op_embed_dim)
+    self._op_node_feat_embedding = _OpNodeFeatEmbedding(num_node_feat)
+    self._op_node_config_feat_embedding = _OpNodeConfigFeatEmbedding(num_config_feat)
     self._prenet = _mlp([hidden_dim] * mlp_layers, hidden_activation)
     self._gc_layers = []
     for _ in range(num_gnns):
@@ -79,10 +89,12 @@ class ResModel(tf.keras.Model):
       self, graph: tfgnn.GraphTensor, num_configs: int,
       backprop=True) -> tf.Tensor:
     graph = self._op_embedding(graph)
+    graph = self._op_node_feat_embedding(graph)
+    graph = self._op_node_config_feat_embedding(graph)
 
-    config_features = graph.node_sets['nconfig']['feats']
+    config_features = graph.node_sets['nconfig']['feats_e']
     node_features = tf.concat([
-        graph.node_sets['op']['feats'],
+        graph.node_sets['op']['feats_e'],
         graph.node_sets['op']['op_e']
     ], axis=-1)
 

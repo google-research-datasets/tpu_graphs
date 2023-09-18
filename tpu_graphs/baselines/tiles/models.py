@@ -82,6 +82,34 @@ class _OpEmbedding(tf.keras.Model):
     return graph.replace_features(node_sets={'op': op_features})
 
 
+class _NodeFeatEmbedding(tf.keras.Model):
+  def __init__(self, num_node_feat: int, embed_d: int = 1, l2reg: float = 1e-4):
+    super().__init__()
+    self.embedding_layer = tf.keras.layers.Embedding(
+      num_node_feat, embed_d, activity_regularizer=tf.keras.regularizers.l2(l2reg))
+
+  def call(self, graph: tfgnn.GraphTensor,
+           training: bool = False) -> tfgnn.GraphTensor:
+    op_features = dict(graph.node_sets['op'].features)
+    op_features['feats_e'] = self.embedding_layer(
+      tf.cast(graph.node_sets['op']['feats'], tf.int32))
+    return graph.replace_features(node_sets={'op': op_features})
+
+class _NodeConfigFeatEmbedding(tf.keras.Model):
+  def __init__(self, num_config_features: int, embed_d: int = 1, l2reg: float = 1e-4):
+    super().__init__()
+    self.embedding_layer = tf.keras.layers.Embedding(
+      num_config_features, embed_d, activity_regularizer=tf.keras.regularizers.l2(l2reg))
+
+  def call(
+          self, graph: tfgnn.GraphTensor,
+          training: bool = False) -> tfgnn.GraphTensor:
+    op_features = dict(graph.node_sets['nconfig'].features)
+    op_features['feats_e'] = self.embedding_layer(
+      tf.cast(graph.node_sets['nconfig']['feats'], tf.int32))
+    return graph.replace_features(node_sets={'nconfig': op_features})
+
+
 class _SAGE(tf.keras.Model, _ConfigFeatureJoiner):
   """Implements GraphSAGE GNN Backbone."""
 

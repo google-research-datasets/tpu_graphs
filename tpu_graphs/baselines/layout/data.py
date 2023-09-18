@@ -623,18 +623,14 @@ def get_npz_split(
 
 
 def save_npz_split_by_graph(
-  split_path: str, normalizer_path: str,
-  min_configs=2, max_configs=-1,
-  cache_dir=None):
+  split_path: str, min_configs=2,
+  max_configs=-1, cache_dir=None):
   """split and save data by (graph id, config)."""
   glob_pattern = os.path.join(split_path, '*.npz')
   files = tf.io.gfile.glob(glob_pattern)
-  node_fea_norm = DatasetNormalizer()
-  node_config_fea_norm = DatasetNormalizer()
   if not files:
     raise ValueError('No files matched: ' + glob_pattern)
 
-  cache_filename = None
   if cache_dir:
     if not tf.io.gfile.exists(cache_dir):
       tf.io.gfile.makedirs(cache_dir)
@@ -648,25 +644,19 @@ def save_npz_split_by_graph(
           graph_id, np_data, config_size = max_configs, min_configs=min_configs)
       for config_range in iter_npz:
           print(f"np_dataset size: {len(_graph_npz._data_dict)}")
-          filename_hash = hashlib.md5(
-                f'{split_path}:{min_configs}:{max_configs}:{config_range}'.encode()
-              ).hexdigest()
-          cache_filename = os.path.join(cache_dir, f'{filename_hash}-cache.npz')
+          filename = f'{split_path}:{min_configs}:{max_configs}:{config_range}'
+          cache_filename = os.path.join(cache_dir, f'{filename}.npz')
 
-          if cache_dir:
-              print(f'dataset cache file {cache_filename} exists exit')
-              continue
-          else:
-              node_fea_norm.update_normalizer(_graph_npz._data_dict['node_config_feat'])
-              node_config_fea_norm.update_normalizer(_graph_npz._data_dict['node_config_feat'])
-              _graph_npz.finalize()
-              if cache_filename:
-                  _graph_npz.save_to_file(cache_filename)
-  print('all cache saving done')
-  print(f'saving normalizer to {normalizer_path}_node_feat.txt')
-  node_fea_norm.save_normalizer("{normalizer_path}_node_feat.txt")
-  print(f'saving normalizer to {normalizer_path}_node_config_feat.txt')
-  node_fea_norm.save_normalizer("{normalizer_path}_node_config_feat.txt")
+          _graph_npz.finalize()
+          _graph_npz.save_to_file(cache_filename)
+  print('cache saving done')
+
+
+def get_npz_from_cache(cache_path: str) -> tf.data.Dataset:
+
+    dataset = tf.data.Dataset.list_files(os.path.join(cache_path, '*.npz'))
+
+    return dataset
 
 def get_npz_dataset(
     root_path: str, min_train_configs=-1, max_train_configs=-1,
@@ -701,18 +691,3 @@ def get_npz_dataset(
   return npz_dataset
 
 
-
-def save_npz_by_parts(
-    root_path: str, min_train_configs=-1, max_train_configs=-1,
-    cache_dir: 'None | str' = None) -> NpzDataset:
-  npz_dataset = NpzDataset()
-  train=get_npz_split_by_graph(
-      os.path.join(root_path, 'train'), cache_dir=cache_dir,
-      min_configs=min_train_configs, max_configs=max_train_configs),
-  validation=get_npz_split_by_graph(
-      os.path.join(root_path, 'valid'), cache_dir=cache_dir,
-      min_configs=min_train_configs, max_configs=max_train_configs),
-  test=get_npz_split_by_graph(
-      os.path.join(root_path, 'test'), cache_dir=cache_dir)
-  npz_dataset.normalize()
-  return npz_dataset

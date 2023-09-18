@@ -97,38 +97,37 @@ def train(args: train_args.TrainArgs):
   num_configs = args.configs
 
   cache_dir = os.path.expanduser(_CACHE_DIR.value)
-  cached_flag = os.path.join(cache_dir, '_SUCCESS')
 
-  if os.path.exists(cached_flag):
-    print(f'{cached_flag} exists, load from cache')
-    train_iter=,
-    validation_iter=,
-    test=
-  else:
-    data.save_npz_split_by_graph(data_root_dir,
-                                 normalizer_path=args.normalizer_path,
-                                 min_train_configs=num_configs,
-                                 max_train_configs=args.max_configs,
-                                 cache_dir=os.path.expanduser(_CACHE_DIR.value))
-    _s = open(cached_flag, 'w')
-    _s.close()
+  # save data to local
+  if not os.path.exists(cached_flag):
+    for data_type in ('train', 'valid', 'test'):
+      print(f'caching {data_type} dataset')
+      cached_flag = os.path.join(cache_dir, data_type, '_SUCCESS')
+      data.save_npz_split_by_graph(os.path.join(data_root_dir, data_type),
+                                   min_configs=num_configs,
+                                   max_configs=args.max_configs,
+                                   cache_dir=os.path.join(cache_dir, data_type))
+      _s = open(cached_flag, 'w')
+      _s.close()
 
-
-  dataset_partitions = data.get_npz_by_parts(
-      data_root_dir, min_train_configs=num_configs,
-      max_train_configs=args.max_configs,
-      cache_dir=os.path.expanduser(_CACHE_DIR.value))
   batch_size = args.batch_size
 
+  print(f'{cached_flag} exists, load from cache...')
   train_ds = (
-      dataset_partitions.train.get_graph_tensors_dataset(
-          num_configs, max_nodes=args.keep_nodes)
-      .shuffle(100, reshuffle_each_iteration=True)
-      .batch(batch_size, drop_remainder=False)
-      .map(tfgnn.GraphTensor.merge_batch_to_components)
-      .map(_graph_and_label))
+      tf.data.Dataset.list_files(os.path.join(cache_dir, 'train', '*.npz'), shuffle=True, seed=2023)
+              .batch(batch_size, drop_remainder=False)
+              .map(tfgnn.GraphTensor.merge_batch_to_components)
+              .map(_graph_and_label))
 
-  model = models.ResModel(num_configs, dataset_partitions.num_ops)
+  valid_ds = (
+      tf.data.Dataset.list_files(os.path.join(cache_dir, 'valid', '*.npz'))
+          .batch(batch_size, drop_remainder=False)
+          .map(tfgnn.GraphTensor.merge_batch_to_components)
+          .map(_graph_and_label))
+
+  test_split = data.get_npz_split(os.path.join(cache_dir, 'test'))
+
+  model = models.ResModel(num_configs)
 
   loss = tfr.keras.losses.ListMLELoss()  # (temperature=10)
   opt = tf.keras.optimizers.Adam(
@@ -137,13 +136,6 @@ def train(args: train_args.TrainArgs):
   model.compile(loss=loss, optimizer=opt, metrics=[
       tfr.keras.metrics.OPAMetric(name='opa_metric'),
   ])
-
-  valid_ds = (
-      dataset_partitions.validation.get_graph_tensors_dataset(
-          num_configs)
-      .batch(batch_size, drop_remainder=False)
-      .map(tfgnn.GraphTensor.merge_batch_to_components)
-      .map(_graph_and_label))
 
   best_params = None
   best_val_opa = -1
@@ -185,9 +177,8 @@ def train(args: train_args.TrainArgs):
   print('\n\n   Running inference on test set ...\n\n')
   test_rankings = []
 
-  assert dataset_partitions.test.graph_id is not None
-  for graph in tqdm.tqdm(dataset_partitions.test.iter_graph_tensors(),
-                         total=dataset_partitions.test.graph_id.shape[-1],
+  for graph in tqdm.tqdm(test_split.iter_graph_tensors(),
+                         total=test_split.graph_id.shape[-1],
                          desc='Inference'):
     num_configs = graph.node_sets['g']['runtimes'].shape[-1]
     all_scores = []
