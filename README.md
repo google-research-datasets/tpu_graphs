@@ -456,7 +456,7 @@ The following describe each element at a particular index in the node feature ve
 
 Suffix _i, where i is an integer, indicates the information for the tensor dimension i. If a tensor has N dimensions, feature values of _i are set to 0 if i >= N (0 padding). Suffix _sum is the summation of the feature values across all dimensions. Suffix _product is the product of the feature values across all dimensions.
 
-The source code of the feature extractor can be found [here](https://github.com/google-research-datasets/tpu_graphs/blob/main/tpu_graphs/process_data/xla/featurizers.h#L542), which extracts features/attributes from HloProto defined [here](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/compiler/xla/service/hlo.proto).
+The source code of the feature extractor can be found [here](https://github.com/google-research-datasets/tpu_graphs/blob/main/tpu_graphs/process_data/xla/featurizers.h#L542), which extracts features/attributes from HloProto defined [here](https://github.com/tensorflow/tensorflow/blob/r2.10/tensorflow/compiler/xla/service/hlo.proto).
 
 ### Tile Config Features
 
@@ -507,12 +507,12 @@ The following describe each element at a particular index in the per-node layout
 4: output_layout_4
 5: output_layout_5
 // 6-11: Physical layout of the input  tensor
-6: intput_layout_0
-7: intput_layout_1
-8: intput_layout_2
-9: intput_layout_3
-10: intput_layout_4
-11: intput_layout_5
+6: input_layout_0
+7: input_layout_1
+8: input_layout_2
+9: input_layout_3
+10: input_layout_4
+11: input_layout_5
 // 12-17: Physical layout of the kernel tensor, only for a convolution operation
 12: kernel_layout_0
 13: kernel_layout_1
