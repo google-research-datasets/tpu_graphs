@@ -522,7 +522,7 @@ The following describe each element at a particular index in the per-node layout
 17: kernel_layout_5
 ```
 
-If a tensor has N dimensions, feature values of _i are set to -1 if i >= N (-1 padding). A layout determines the order of minor-to-major tensor dimensions. For example, the layout of {1, 0, 2, -1, -1, -1} of a 3D tensor indicates that dimension 1 is the most minor (elements of the most minor dimension are consecutive in the physical space) and dimension 2 is the most major.
+If a tensor has N dimensions, feature values of _i are set to -1 if i >= N (-1 padding). A layout determines the order of minor-to-major tensor dimensions. For example, the layout of {1, 0, 2, -1, -1, -1} of a 3D tensor indicates that dimension 1 is the most minor (elements of the most minor dimension are consecutive in the physical space) and dimension 2 is the most major. We also include a tensor layout of {-1, -1, -1, -1, -1, -1} to indicate the compiler to apply its default strategy of selecting the layout for that tensor.
 
 
 ## Graph Feature Extraction
