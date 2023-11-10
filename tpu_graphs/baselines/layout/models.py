@@ -32,10 +32,22 @@ class ResModel(tf.keras.Model):
       self, num_configs: int, num_ops: int, op_embed_dim: int = 32,
       num_gnns: int = 2, mlp_layers: int = 2,
       hidden_activation: str = 'leaky_relu',
-      hidden_dim: int = 32, reduction: str = 'sum'):
+      hidden_dim: int = 32,
+      adj_normalization='sym',
+      dropout='backpropdropout'):
+    # dropout can be one of `('fullgraph', 'dropout', 'backpropdropout')`.
+    # + fullgraph: all nodes and edges will participate in message-passing.
+    # + dropout: most nodes are removed except a subgraph of nodes, that are
+    #   topologically close.
+    # + backpropdropout: The full graph is used for the forward pass but the
+    #   gradients go through only a subgraph.
     super().__init__()
+    assert dropout in ('fullgraph', 'dropout', 'backpropdropout')
+    self._hidden_activation = hidden_activation
+    self.dropout = dropout
     self._num_configs = num_configs
     self._num_ops = num_ops
+    self._adj_normalization = adj_normalization
     self._op_embedding = _OpEmbedding(num_ops, op_embed_dim)
     self._prenet = _mlp([hidden_dim] * mlp_layers, hidden_activation)
     self._gc_layers = []
@@ -57,27 +69,46 @@ class ResModel(tf.keras.Model):
     adj_config = implicit.AdjacencyMultiplier(
         graph, edgeset_prefix+'config')  # nconfig->op
 
-    adj_op_op_hat = (adj_op_op + adj_op_op.transpose()).add_eye()
-    adj_op_op_hat = adj_op_op_hat.normalize_symmetric()
+    # Implicit representations of adjacency computations, e.g.,
+    # A_sym_norm = (D + I)^-0.5   (A + I)   (D + I)^-0.5   [GCN, Kipf & Welling]
+    adj_op_symnorm = (
+        adj_op_op + adj_op_op.transpose()).add_eye().normalize_symmetric()
+    # A_right_norm = A D^-1  , or,  (A+I) (D+I)^-1
+    adj_op_rightnorm = adj_op_op.add_eye().normalize_right()
+    # A_t_right_norm: transpose A then do above.
+    adj_op_t_rightnorm = adj_op_op.add_eye().transpose().normalize_right()
+    # NOTE: since they are never multiplied (via op @), they are actually never
+    # calculated. Only the ones invoked in `a_time_x` will actually be used on
+    # data.
 
+    def a_times_x(x):
+      if self._adj_normalization == 'sym':
+        return adj_op_symnorm @ x
+      elif self._adj_normalization == 'asym':
+        return tf.concat(
+            [adj_op_rightnorm @ x, adj_op_t_rightnorm @ x], axis=-1)
+
+    activation = tf.keras.layers.Activation(self._hidden_activation)
     x = node_features
 
     x = tf.stack([x] * num_configs, axis=1)
     config_features = 100 * (adj_config @ config_features)
     x = tf.concat([config_features, x], axis=-1)
     x = self._prenet(x)
-    x = tf.nn.leaky_relu(x)
+    x = activation(x)
 
     for layer in self._gc_layers:
       y = x
       y = tf.concat([config_features, y], axis=-1)
-      y = tf.nn.leaky_relu(layer(adj_op_op_hat @ y))
+      y = activation(layer(a_times_x(y)))
       x += y
     return x
 
   def forward(
       self, graph: tfgnn.GraphTensor, num_configs: int,
-      backprop=True) -> tf.Tensor:
+      dropout=None) -> tf.Tensor:
+    if dropout is None:
+      dropout = self.dropout
     graph = self._op_embedding(graph)
 
     config_features = graph.node_sets['nconfig']['feats']
@@ -86,19 +117,22 @@ class ResModel(tf.keras.Model):
         graph.node_sets['op']['op_e']
     ], axis=-1)
 
-    x_full = self._node_level_forward(
-        node_features=tf.stop_gradient(node_features),
-        config_features=tf.stop_gradient(config_features),
-        graph=graph, num_configs=num_configs)
-
-    if backprop:
-      # TODO(haija, mangpo): Potential place for efficiency improvement. We are
-      # now running forward pass on the bug graph. Potential improvement could
-      # use stored (precomputed) activations.
+    stop_gradient = tf.stop_gradient
+    x: tf.Tensor | None = None
+    edgeset_prefix = ''
+    if dropout == 'dropout':  # See comment at `__init__(self, `.
+      edgeset_prefix = 'sampled_'
+      x = self._node_level_forward(
+          node_features, config_features, graph,
+          num_configs=num_configs, edgeset_prefix=edgeset_prefix)
+    elif dropout == 'backpropdropout':
+      edgeset_prefix = 'sampled_'
+      x_full = self._node_level_forward(
+          node_features, config_features, graph, num_configs=num_configs)
+      x_full = stop_gradient(x_full)
       x_backprop = self._node_level_forward(
-          node_features=node_features,
-          config_features=config_features,
-          graph=graph, num_configs=num_configs, edgeset_prefix='sampled_')
+          node_features, config_features, graph,
+          num_configs=num_configs, edgeset_prefix=edgeset_prefix)
 
       is_selected = graph.node_sets['op']['selected']
       # Need to expand twice as `is_selected` is a vector (num_nodes) but
@@ -106,10 +140,13 @@ class ResModel(tf.keras.Model):
       is_selected = tf.expand_dims(is_selected, axis=-1)
       is_selected = tf.expand_dims(is_selected, axis=-1)
       x = tf.where(is_selected, x_backprop, x_full)
-    else:
-      x = x_full
+    elif dropout == 'fullgraph':
+      x = self._node_level_forward(
+          node_features, config_features, graph, num_configs=num_configs)
 
-    adj_config = implicit.AdjacencyMultiplier(graph, 'config')
+    assert x is not None
+
+    adj_config = implicit.AdjacencyMultiplier(graph, edgeset_prefix+'config')
 
     # Features for configurable nodes.
     config_feats = (adj_config.transpose() @ x)
