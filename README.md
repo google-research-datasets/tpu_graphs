@@ -2,7 +2,17 @@
 
 TpuGraphs is a performance prediction dataset on full tensor programs, represented as computational graphs, running on Tensor Processing Units (TPUs). Each graph in the dataset represents the main computation of a machine learning workload, e.g., a training epoch or an inference step. Each data sample contains a computational graph, a compilation configuration, and the execution time of the graph when compiled with the configuration. The graphs in the dataset are collected from open-source machine learning programs, featuring popular model architectures (e.g., ResNet, EfficientNet, Mask R-CNN, and Transformer).
 
-Please refer to our [paper](https://arxiv.org/abs/2308.13490) for more details about the importance and challenges of the dataset, how the dataset is generated, the model baselines, and the experimental results. Please cite the paper when using this dataset.
+Please refer to our [paper](https://arxiv.org/abs/2308.13490) for more details about the importance and challenges of the dataset, how the dataset is generated, the model baselines, and the experimental results. If you find this dataset useful in your research, please cite our paper as:
+
+```
+@inproceedings{tpugraphs,
+  title={TpuGraphs: A Performance Prediction Dataset on Large Tensor Computational Graphs},
+  author={Phitchaya Mangpo Phothilimthana and Sami Abu-El-Haija and Kaidi Cao and Bahare Fatemi and Michael Burrows and Charith Mendis and Bryan Perozzi},
+  booktitle={Thirty-seventh Conference on Neural Information Processing Systems Datasets and Benchmarks Track},
+  year={2023},
+  url={https://openreview.net/forum?id=plAix1NxhU}
+}
+```
 
 *This is not an officially supported Google product.*
 
@@ -24,31 +34,48 @@ You can use `wget` or `curl` command to download files.
   - {search}: `default` or `random`
   - {split}: `train`, `valid`, or `test`
 
-To download all files, you may run (from a clone of this directory):
+To download all files, please follow **one** of these options:
 
-```sh
-python3 echo_download_commands.py | bash
-```
+  1. Download http://download.tensorflow.org/data/tpu_graphs/v0/npz_all.tar, preferably, to `~/data/tpugraphs` (as our training pipelines read from there),
+  then untar as `tar xvf npz_all.tar`. This can be done with bash commands:
 
-Removing the last pipe (`| bash`) shows the commands for downloading the dataset
-(a few `curl` commands followed by `tar xvf`).
+  ```
+  mkdir -p ~/data/tpugraphs
+  cd ~/data/tpugraphs
+  curl http://download.tensorflow.org/data/tpu_graphs/v0/npz_all.tar > npz_all.tar
+  tar xvf npz_all.tar
+  ```
 
-To copy data for a specific collection, e.g. the layout:xla:random collection, run:
+  2. Download from
+  [Kaggle](https://www.kaggle.com/competitions/predict-ai-model-runtime/data).
 
-```sh
-mkdir -p ~/data/tpugraphs
-cd ~/data/tpugraphs
+  3. Use our helper script `echo_download_command.py`.
+  From a clone of this directory:
 
-curl http://download.tensorflow.org/data/tpu_graphs/v0/npz_layout_xla_random_train.tar > npz_layout_xla_random_train.tar
-curl http://download.tensorflow.org/data/tpu_graphs/v0/npz_layout_xla_random_valid.tar > npz_layout_xla_random_valid.tar
-curl http://download.tensorflow.org/data/tpu_graphs/v0/npz_layout_xla_random_test.tar > npz_layout_xla_random_test.tar
-tar xvf npz_layout_xla_random_train.tar
-tar xvf npz_layout_xla_random_valid.tar
-tar xvf npz_layout_xla_random_test.tar
-```
+  ```sh
+  python3 echo_download_commands.py | bash
+  ```
 
-For a description of these files, please scroll towards the end of this page
-("Dataset File Description").
+  Removing the last pipe (`| bash`) shows the commands for downloading the dataset
+  (a few `curl` commands followed by `tar xvf`).
+
+  To download {train, test, validation} data for layout collection, e.g.,
+  for `layout:xla:random`, run:
+
+  ```sh
+  mkdir -p ~/data/tpugraphs
+  cd ~/data/tpugraphs
+
+  curl http://download.tensorflow.org/data/tpu_graphs/v0/npz_layout_xla_random_train.tar > npz_layout_xla_random_train.tar
+  curl http://download.tensorflow.org/data/tpu_graphs/v0/npz_layout_xla_random_valid.tar > npz_layout_xla_random_valid.tar
+  curl http://download.tensorflow.org/data/tpu_graphs/v0/npz_layout_xla_random_test.tar > npz_layout_xla_random_test.tar
+  tar xvf npz_layout_xla_random_train.tar
+  tar xvf npz_layout_xla_random_valid.tar
+  tar xvf npz_layout_xla_random_test.tar
+  ```
+
+  For a description of these files, you may scroll down to
+  ["Dataset File Description"](#dataset-file-description).
 
 ## Running Baseline Models
 
@@ -136,11 +163,11 @@ To run the pipeline on Google Cloud, please follow [this instruction](https://cl
 
 
 #### Evaluate model
-Once the training is done, the training output directory specified with
-`--out_dir` (~/out/tpugraphs_tiles by default) will contain a model directory,
-whose name starts with the prefix `model_`.
 
-To evaluate a model(s), run:
+To evaluate models trained on the `tile` collection, look for the model
+directory (the training pipeline defaults flag `--out_dir` to
+`~/out/tpugraphs_tiles`) which should start with prefix `model_`.
+To evaluate model(s), run:
 ```
 python tiles_evaluate.py --dirs <comma-separated list of model dirs>
 ```
@@ -161,17 +188,8 @@ Currently, the evaluation script does not produce the ranking `.csv` file.
 
 ### Model on `layout:{xla|nlp}:{random|default}` collections
 
-You may run the GST model (used in the paper), which is available at:
-https://github.com/kaidic/GST.
-The GST model is built on top of [GraphGPS](https://github.com/rampasek/GraphGPS)
-framework, implemented using PyTorch. It can be trained either on a CPU or GPU.
-The current code does not output the ranking `.csv` file.
-
-We also provide another baseline for the layout collections
-(implemented after the paper was written) in this repo. It is similar to
-the GST model described in the paper, but implemented using TF-GNN and
-running on a CPU.
-You can train this baseline model by invoking:
+We provide baseline for the layout collections in this repo.
+You can train the layout baseline model by invoking:
 
 ```sh
 # As a test.
@@ -190,11 +208,14 @@ python layout_train.py --source nlp --search random --epochs 10 --max_configs 10
 python layout_train.py --source nlp --search default --epochs 10 --max_configs 1000
 ```
 
-NOTE: For running the NLP models, since the data is large, our trainer script
-cannot fit the data into memory. The flag `--max_configs 1000` allows us to run,
-by sampling only this many configurations per graph. However, you may write your
-own scalable implementation, or modify ours, or run
-GST: https://github.com/kaidic/GST.
+NOTE: For training on the NLP collections, since the data is large, our trainer
+script cannot fit the data into memory. The flag `--max_configs 1000` allows us
+to run. It samples only this many configurations per graph. However, you may
+write your own scalable implementation, or modify ours.
+
+For an alternative implementation (that uses PyTorch), you may view our
+collaborators' Graph Segmented Training implementation (GST) at
+https://github.com/kaidic/GST.
 
 
 Each (complete) invocation of `python layout_train.py` should train the model,
@@ -215,6 +236,12 @@ specify them as flag arguments. By default, `combine_csvs.py` will choose the
 most-recent timestamp files, searching in the default directories produced by
 the training pipelines (i.e. `~/out/tpugraphs_layout` for `layout_train.py`, and
 `~/out/tpugraphs_tiles/` for `tiles_train.py`).
+
+
+#### Evaluate model
+
+To evaluate models on the validation set of layout collections, please refer to
+[tpu_graphs/evals](https://github.com/google-research-datasets/tpu_graphs/tree/main/tpu_graphs/evals).
 
 
 ## Dataset File Description
