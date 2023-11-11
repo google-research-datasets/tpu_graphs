@@ -22,9 +22,9 @@ from typing import NamedTuple
 
 from absl import flags
 
-_EPOCHS = flags.DEFINE_integer('epochs', 500, 'number of train epochs.')
+_EPOCHS = flags.DEFINE_integer('epochs', 50, 'number of train epochs.')
 _EARLY_STOP = flags.DEFINE_integer(
-    'early_stop', 40,
+    'early_stop', 25,
     'If held-out validation does not improve after this many epochs, then '
     'training will stop.')
 _LEARNING_RATE = flags.DEFINE_float(
@@ -40,6 +40,13 @@ _MAX_CONFIGS = flags.DEFINE_integer(
     'active if > 0. The configurations will be selected as follows. Best and '
     'worst configurations will be selected, as will as some in the middle. '
     'This option is useful to make the dataset fit in memory.')
+_MODEL = flags.DEFINE_string(
+    'model', 'ResModel',
+    'Name of model defined in baseline/layout/models.py.')
+_MODEL_KWARGS_JSON = flags.DEFINE_string(
+    'model_kwargs_json', '{}',
+    'JSON-serialized dict containing constructor parameters to the model (see '
+    'baseline/layout/models.py).')
 _KEEP_NODES = flags.DEFINE_integer(
     'keep_nodes', 5000,
     'Sets the number of nodes to keep for Graph-Segmented-Training')
@@ -70,9 +77,13 @@ _SEARCH = flags.DEFINE_string(
 
 class TrainArgs(NamedTuple):
   """Bundles flags for model specification and training loop."""
-  # Data
+  # Data.
   source: str  # One of "nlp" or "xla"
   search: str  # One of "random" or "default"
+
+  # Model.
+  model: str  # Model name in models.py
+  model_kwargs_json: str  # JSON-encoded kwargs for constructor of `model`.
 
   # Training loop.
   epochs: int
@@ -96,7 +107,9 @@ class TrainArgs(NamedTuple):
 
   def compute_hash(self) -> str:
     """Returns psuedo-random string that uniquely identifies flag arguments."""
-    json_args = json.dumps(self._asdict(), sort_keys=True).encode()
+    params_dict = self._asdict()
+    params_dict.pop('out_dir')  # Should not influence the hash.
+    json_args = json.dumps(params_dict, sort_keys=True).encode()
     return hashlib.md5(json_args).hexdigest()
 
 
@@ -123,6 +136,7 @@ def _get_results_csv_or_default() -> str:
 def get_args() -> TrainArgs:
   return TrainArgs(
       source=_SOURCE.value, search=_SEARCH.value,
+      model=_MODEL.value, model_kwargs_json=_MODEL_KWARGS_JSON.value,
       epochs=_EPOCHS.value, batch_size=_BATCH.value,
       early_stop=_EARLY_STOP.value, keep_nodes=_KEEP_NODES.value,
       learning_rate=_LEARNING_RATE.value, clip_norm=_CLIP_NORM.value,

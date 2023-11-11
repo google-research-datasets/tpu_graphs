@@ -562,7 +562,9 @@ def get_npz_split(
 
 
 def get_npz_dataset(
-    root_path: str, min_train_configs=-1, max_train_configs=-1,
+    root_path: str, min_train_configs: int = -1, max_train_configs: int = -1,
+    min_valid_configs: 'None | int' = None,
+    max_valid_configs: 'None | int' = None,
     cache_dir: 'None | str' = None) -> NpzDataset:
   """Returns {train, test, validation} partitions of layout dataset collection.
 
@@ -572,23 +574,72 @@ def get_npz_dataset(
   Args:
     root_path: Path where dataset lives. It must have subdirectories 'train',
       'test' and 'valid'.
-    min_train_configs: If > 0, then layout examples will be filtered to have at
-      least this many configurations (features and runtimes).
-    max_train_configs: Training and validation graphs will be truncated to
-      include only this many configurations. Set this according to your
-      available device memory. If you have lots of memory, you may set to -1,
-      to include all configurations for all {train, validation} graphs.
+    min_train_configs: If > 0, then examples of a graph with less than this many
+      configurations (features and runtimes) will be removed from the training
+      set.
+    max_train_configs: Training graphs will be truncated to include only this
+      many configurations. Set this according to your available device memory.
+      If you have lots of memory, you may set to -1, to include all
+      configurations for all train (and possibly validation) graphs.
+    min_valid_configs: Same as `min_train_configs`, but for the validation
+      partition.
+    max_valid_configs: Same as `max_train_configs`, but for the validation
+      partition.
     cache_dir: If given, the many files for each of {train, test, validation}
       will be stored as one file (makes loading faster, for future runs).
   """
+  if min_valid_configs is None:
+    min_valid_configs = min_train_configs
+  if max_valid_configs is None:
+    max_valid_configs = max_train_configs
+
   npz_dataset = NpzDataset(
       train=get_npz_split(
           os.path.join(root_path, 'train'), cache_dir=cache_dir,
           min_configs=min_train_configs, max_configs=max_train_configs),
       validation=get_npz_split(
           os.path.join(root_path, 'valid'), cache_dir=cache_dir,
-          min_configs=min_train_configs, max_configs=max_train_configs),
+          min_configs=min_valid_configs, max_configs=max_valid_configs),
       test=get_npz_split(
           os.path.join(root_path, 'test'), cache_dir=cache_dir))
   npz_dataset.normalize()
   return npz_dataset
+
+
+def sub_configs(
+    graph: tfgnn.GraphTensor,
+    config_indices: list[int]|slice) -> tfgnn.GraphTensor:
+  """Given a graph with many configurations, only keep `config_indices`.
+
+  Args:
+    graph: GraphTensor corresponding corresponding to one layout collection
+      example (graph, and `K` configuration features & runtimes).
+    config_indices: Configuration (features and runtimes) indices to keep. Every
+      entry must be in range `[0, K-1]`.
+
+  Returns:
+    Copy of `graph` modified to have configurations corresponding to
+    `config_indices`.
+  """
+  def _gather_indices(tensor):
+    if isinstance(config_indices, slice):
+      return tensor[:, config_indices]
+    else:
+      return tf.gather(tensor, config_indices, axis=1)
+  return tfgnn.GraphTensor.from_pieces(
+      edge_sets=graph.edge_sets,
+      node_sets={
+          'op': graph.node_sets['op'],
+          'nconfig': tfgnn.NodeSet.from_fields(
+              sizes=graph.node_sets['nconfig'].sizes,
+              features={
+                  'feats': _gather_indices(graph.node_sets['nconfig']['feats'])
+              }),
+          'g': tfgnn.NodeSet.from_fields(
+              sizes=tf.constant([1]),
+              features={
+                  'graph_id': graph.node_sets['g']['graph_id'],
+                  'runtimes': _gather_indices(graph.node_sets['g']['runtimes']),
+                  'kept_node_ratio': graph.node_sets['g']['kept_node_ratio'],
+              })
+      })
